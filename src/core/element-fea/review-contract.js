@@ -54,6 +54,7 @@ export function createReviewInput(value) {
   const row = record(value, 'review input');
   exactKeys(row, INPUT_KEYS, 'review input');
   if (row.schema !== REVIEW_INPUT_SCHEMA) throw new TypeError('Invalid lfea-review-input/v1 schema.');
+  const declaredHash = semanticHashText(row.semanticHash, 'semanticHash');
   const base = {
     schema: REVIEW_INPUT_SCHEMA,
     reviewIdentity: text(row.reviewIdentity, 'reviewIdentity'),
@@ -67,7 +68,7 @@ export function createReviewInput(value) {
     sourceReferences: normalizeSourceReferences(row.sourceReferences),
   };
   const hash = semanticHash(base);
-  if (row.semanticHash !== undefined && row.semanticHash !== hash) throw new TypeError('Review input semantic hash mismatch.');
+  if (declaredHash !== hash) throw new TypeError('Review input semantic hash mismatch.');
   return deepFreeze({ ...base, semanticHash: hash });
 }
 
@@ -101,7 +102,6 @@ export function withoutHash(value) {
   const { semanticHash: _semanticHash, ...base } = value || {};
   return base;
 }
-
 
 function normalizeAdapterResult(value) {
   const row = structuredClone(value);
@@ -214,6 +214,11 @@ function boolean(value, name) {
 function text(value, name) {
   if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} is required.`);
   return value.trim();
+}
+function semanticHashText(value, name) {
+  const result = text(value, name);
+  if (!/^fnv1a64:[0-9a-f]{16}$/.test(result)) throw new TypeError(`${name} must be a canonical fnv1a64 semantic hash.`);
+  return result;
 }
 function record(value, name) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new TypeError(`${name} must be a record.`);
