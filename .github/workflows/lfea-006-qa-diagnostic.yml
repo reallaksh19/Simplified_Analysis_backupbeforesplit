@@ -1,0 +1,35 @@
+name: LFEA-006 QA Diagnostic
+
+on:
+  push:
+    branches:
+      - agent/lfea-006-qa-diagnostic
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capture aggregate QA
+        id: qa
+        continue-on-error: true
+        run: npm run check:qa -- --skip-e2e > lfea-006-qa.log 2>&1
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lfea-006-qa-diagnostic
+          path: lfea-006-qa.log
+      - if: steps.qa.outcome != 'success'
+        run: exit 1
