@@ -118,7 +118,7 @@ const requiredE2EFiles = [
     'e2e/phase9-analysis-readiness.spec.js',
     'e2e/w10.1-shared-model-export.spec.js',
     'e2e/w10.2-topology-workspace.spec.js',
-    'e2e/w10.3-support-attachment-workspace.spec.js',
+    'e2e/w10.3-support-restraint-workspace.spec.js',
     'e2e/w10.4-model-load-workspace.spec.js',
     'e2e/w10.5-support-load-screening-workspace.spec.js',
     'e2e/w10.6-vertical-beam-workspace.spec.js',
