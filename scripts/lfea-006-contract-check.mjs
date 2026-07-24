@@ -6,6 +6,7 @@ import {
 } from '../src/core/element-fea/index.js';
 import { q4ReviewFixture,reviewProfile } from './lfea-006-fixtures.mjs';
 
+// The closed review-input contract requires a declared canonical semantic hash.
 const fixture=q4ReviewFixture();const profile=reviewProfile({includeSourceArtifacts:true});
 const normalizedProfile=createReviewProfile(profile);assert.equal(normalizedProfile.schema,REVIEW_PROFILE_SCHEMA);assert.ok(Object.isFrozen(normalizedProfile));assert.equal(validateReviewProfile(profile).ok,true);
 const normalizedInput=createReviewInput(fixture.input);assert.equal(normalizedInput.schema,REVIEW_INPUT_SCHEMA);assert.ok(Object.isFrozen(normalizedInput));assert.equal(validateReviewInput(fixture.input).ok,true);
