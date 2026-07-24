@@ -4,8 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const BASE_SHA = 'ebe7fa526712ba945a1fa8e7fd7c6fe06c73c07a';
+const W10_R3_MERGED_SHA = 'e88d58137a1614c437c175b167300416d05fd4ba';
 const root = process.cwd();
-const scopeBase = resolveScopeBase();
+const successorMode = isAncestor(W10_R3_MERGED_SHA, 'HEAD');
+const scopeBase = successorMode ? W10_R3_MERGED_SHA : resolveScopeBase();
 const changed = gitLines(['diff', '--name-only', scopeBase, 'HEAD']);
 const added = new Set(gitLines(['diff', '--name-only', '--diff-filter=A', scopeBase, 'HEAD']));
 const allowed = [
@@ -23,15 +25,15 @@ const allowed = [
   /^package\.json$/,
 ];
 const errors = [];
-changed.forEach((file) => { if (!allowed.some((rule) => rule.test(file))) errors.push(`Disallowed W10.R3 changed path: ${file}`); });
-if (changed.includes('package-lock.json')) errors.push('package-lock.json must not change in W10.R3.');
 
-addedJavaScript().forEach((file) => {
-  const content = read(file);
-  const lines = content.split(/\r?\n/).length - 1;
-  if (lines >= 300) errors.push(`${file} has ${lines} lines; maximum is below 300.`);
-  if (/export\s+default\b/.test(content)) errors.push(`${file} contains a default export.`);
-});
+if (!successorMode) {
+  changed.forEach((file) => { if (!allowed.some((rule) => rule.test(file))) errors.push(`Disallowed W10.R3 changed path: ${file}`); });
+  if (changed.includes('package-lock.json')) errors.push('package-lock.json must not change in W10.R3.');
+  addedJavaScript().forEach(validateAddedJavaScript);
+} else {
+  const protectedChanges = changed.filter((file) => file.startsWith('src/core/settings-authority/') || /^src\/workspace\/settings-/.test(file) || file === 'src/workspace/model-calculation-controller.js');
+  protectedChanges.forEach((file) => errors.push(`Successor work changed W10.R3-owned Settings implementation path: ${file}`));
+}
 
 productionFiles().forEach((file) => {
   const content = read(file);
@@ -68,21 +70,19 @@ if (errors.length) {
   errors.forEach((error) => console.error(` - ${error}`));
   process.exit(1);
 }
-console.log(`✅ W10.R3 source, ownership, runtime and dependency boundaries passed for ${changed.length} changed file(s) against ${scopeBase}.`);
+console.log(`✅ W10.R3 source, ownership, runtime and dependency boundaries passed in ${successorMode ? 'successor' : 'implementation'} mode against ${scopeBase}.`);
 
-function resolveScopeBase() {
-  try {
-    fetchMainHistory();
-    return gitLines(['merge-base', 'HEAD', 'origin/main'])[0] || BASE_SHA;
-  } catch { ensureCommit(BASE_SHA); return BASE_SHA; }
+function validateAddedJavaScript(file) {
+  const content = read(file);
+  const lines = content.split(/\r?\n/).length - 1;
+  if (lines >= 300) errors.push(`${file} has ${lines} lines; maximum is below 300.`);
+  if (/export\s+default\b/.test(content)) errors.push(`${file} contains a default export.`);
 }
-function fetchMainHistory() {
-  const shallow = git(['rev-parse', '--is-shallow-repository']).trim() === 'true';
-  if (shallow) execFileSync('git', ['fetch', '--no-tags', '--unshallow', 'origin'], { cwd: root, stdio: 'ignore' });
-  execFileSync('git', ['fetch', '--no-tags', 'origin', 'main'], { cwd: root, stdio: 'ignore' });
-}
+function isAncestor(ancestor, descendant) { try { execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { cwd: root, stdio: 'ignore' }); return true; } catch { return false; } }
+function resolveScopeBase() { try { fetchMainHistory(); return gitLines(['merge-base', 'HEAD', 'origin/main'])[0] || BASE_SHA; } catch { ensureCommit(BASE_SHA); return BASE_SHA; } }
+function fetchMainHistory() { const shallow = git(['rev-parse', '--is-shallow-repository']).trim() === 'true'; if (shallow) execFileSync('git', ['fetch', '--no-tags', '--unshallow', 'origin'], { cwd: root, stdio: 'ignore' }); execFileSync('git', ['fetch', '--no-tags', 'origin', 'main'], { cwd: root, stdio: 'ignore' }); }
 function addedJavaScript() { return changed.filter((file) => added.has(file) && /\.(?:js|mjs)$/.test(file)); }
-function productionFiles() { return changed.filter((file) => file.startsWith('src/core/settings-authority/') || /^src\/workspace\/(?:settings-|bootstrap|application-shell-controller|model-calculation-controller)/.test(file)); }
+function productionFiles() { return successorMode ? [...gitLines(['ls-files', 'src/core/settings-authority']), ...gitLines(['ls-files', 'src/workspace/settings-controller.js', 'src/workspace/settings-persistence-adapter.js', 'src/workspace/settings-view.js', 'src/workspace/model-calculation-controller.js'])] : changed.filter((file) => file.startsWith('src/core/settings-authority/') || /^src\/workspace\/(?:settings-|bootstrap|application-shell-controller|model-calculation-controller)/.test(file)); }
 function importClauses(content) { return [...content.matchAll(/import[\s\S]*?from\s+['"][^'"]+['"]/g)].map((row) => row[0]).join('\n'); }
 function requireTokens(file, tokens, label) { const content = read(file); tokens.forEach((token) => { if (!content.includes(token)) errors.push(`${label} token ${token} is missing.`); }); }
 function ensureCommit(sha) { try { execFileSync('git', ['cat-file', '-e', `${sha}^{commit}`], { cwd: root, stdio: 'ignore' }); } catch { execFileSync('git', ['fetch', '--no-tags', '--depth=1', 'origin', sha], { cwd: root, stdio: 'ignore' }); } }
