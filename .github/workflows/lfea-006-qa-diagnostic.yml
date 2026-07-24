@@ -1,6 +1,11 @@
 name: LFEA-006 QA Diagnostic
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/lfea-006-qa-diagnostic.yml'
+      - 'scripts/qa-check.mjs'
   push:
     branches:
       - agent/lfea-006-qa-diagnostic
