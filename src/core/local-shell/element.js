@@ -9,7 +9,7 @@ import {
   rigidTranslationEvidence,
 } from './element-qualification.js';
 import { ShellNumericalError } from './errors.js';
-import { canonicalFacet, frameResidual, localCoordinates } from './geometry.js';
+import { canonicalFacet, frameResidual, localCoordinates, nodeBasisEvidence } from './geometry.js';
 import {
   matrixScale,
   multiply,
@@ -24,6 +24,10 @@ export function buildShellElementEvidence(model) {
   const nodeMap = new Map(model.nodes.map((node) => [node.nodeId, node]));
   const materialMap = new Map(model.materials.map((material) => [material.materialId, material]));
   return model.elements.map((element) => buildElement(element, nodeMap, materialMap, model.qualificationProfile));
+}
+
+export function buildNodeBasisEvidence(model) {
+  return model.nodes.map((node) => nodeBasisEvidence(node, model.qualificationProfile));
 }
 
 function buildElement(element, nodeMap, materialMap, profile) {
