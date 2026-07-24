@@ -35,6 +35,7 @@ success &= runCheck('W10.11 Pipe Solver Consumer Static Check', 'npm run check:w
 success &= runCheck('LAFEA.1 Canonical Attachment Foundation Static Check', 'npm run check:lafea.1');
 success &= runCheck('LAFEA.2 Nominal Pipe Section Screening Static Check', 'npm run check:lafea.2');
 success &= runCheck('LAFEA.3 Deterministic 2D Continuum Behavioral Static Check', 'node scripts/lafea.3-contract-check.mjs && node scripts/lafea.3-element-check.mjs && node scripts/lafea.3-solver-check.mjs && node scripts/lafea.3-patch-check.mjs && node scripts/lafea.3-stress-energy-check.mjs && node scripts/lafea.3-determinism-check.mjs');
+success &= runCheck('LAFEA.4 Deterministic 2.5D Thin-Shell Behavioral Static Check', 'npm run check:lafea.4');
 
 console.log(`\n--- Running Math.random Check ---`);
 function findMathRandom(dir, problems = []) {
@@ -117,7 +118,7 @@ const requiredE2EFiles = [
     'e2e/phase9-analysis-readiness.spec.js',
     'e2e/w10.1-shared-model-export.spec.js',
     'e2e/w10.2-topology-workspace.spec.js',
-    'e2e/w10.3-support-restraint-workspace.spec.js',
+    'e2e/w10.3-support-attachment-workspace.spec.js',
     'e2e/w10.4-model-load-workspace.spec.js',
     'e2e/w10.5-support-load-screening-workspace.spec.js',
     'e2e/w10.6-vertical-beam-workspace.spec.js',
