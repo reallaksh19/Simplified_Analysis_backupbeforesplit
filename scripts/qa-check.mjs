@@ -23,9 +23,9 @@ success &= runCheck('Syntax Check', 'npm run syntax:strict');
 success &= runCheck('Forbidden Modules Check', 'node scripts/smoke-check.mjs');
 success &= runCheck('W10.1 Shared Model Static Check', 'npm run check:w10.1:static');
 success &= runCheck('W10.2 Topology Static Check', 'npm run check:w10.2:static');
-success &= runCheck('W10.3 Support/Restraint Static Check', 'npm run check:w10.3:static');
+success &= runCheck('W10.3 Support/Restraint Behavioral Static Check', 'node scripts/w10.3-support-attachment-contract-check.mjs && node scripts/w10.3-restraint-capability-contract-check.mjs && node scripts/w10.3-support-restraint-property-check.mjs');
 success &= runCheck('W10.4 Model Load Static Check', 'npm run check:w10.4:static');
-success &= runCheck('W10.5 Support Load Screening Static Check', 'npm run check:w10.5:static');
+success &= runCheck('W10.5 Support Load Screening Behavioral Static Check', 'node scripts/w10.5-support-load-screening-contract-check.mjs && node scripts/w10.5-support-load-screening-property-check.mjs');
 success &= runCheck('W10.6 Vertical Beam Solver Static Check', 'npm run check:w10.6:static');
 success &= runCheck('W10.7 Model Calculation Package Static Check', 'npm run check:w10.7:static');
 success &= runCheck('W10.8 Workspace Consumer Static Check', 'npm run check:w10.8:static');
@@ -34,7 +34,7 @@ success &= runCheck('W10.10 3D Calc Consumer Static Check', 'node scripts/w10.10
 success &= runCheck('W10.11 Pipe Solver Consumer Static Check', 'npm run check:w10.11:static');
 success &= runCheck('LAFEA.1 Canonical Attachment Foundation Static Check', 'npm run check:lafea.1');
 success &= runCheck('LAFEA.2 Nominal Pipe Section Screening Static Check', 'npm run check:lafea.2');
-success &= runCheck('LAFEA.3 Deterministic 2D Continuum Static Check', 'npm run check:lafea.3');
+success &= runCheck('LAFEA.3 Deterministic 2D Continuum Behavioral Static Check', 'node scripts/lafea.3-contract-check.mjs && node scripts/lafea.3-element-check.mjs && node scripts/lafea.3-solver-check.mjs && node scripts/lafea.3-patch-check.mjs && node scripts/lafea.3-stress-energy-check.mjs && node scripts/lafea.3-determinism-check.mjs');
 
 console.log(`\n--- Running Math.random Check ---`);
 function findMathRandom(dir, problems = []) {
