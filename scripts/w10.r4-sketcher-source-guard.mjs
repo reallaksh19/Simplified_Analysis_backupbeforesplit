@@ -16,7 +16,6 @@ const allowed = [
   /^src\/workspace\/(?:application-shell-controller|bootstrap|event-topics|sketcher-controller|sketcher-view|sketcher-workspace-adapter|workspace-layout)\.js$/,
   /^scripts\/w10\.r4-[^/]+\.mjs$/,
   /^scripts\/w10\.r3-settings-source-guard\.mjs$/,
-  /^scripts\/lafea\.3-source-guard\.mjs$/,
   /^e2e\/w10\.r4-[^/]+\.spec\.js$/,
   /^docs\/main-tab-recovery\/W10\.R4_SKETCHER_RECOVERY\.md$/,
   /^\.github\/workflows\/w10-r4-certification\.yml$/,
