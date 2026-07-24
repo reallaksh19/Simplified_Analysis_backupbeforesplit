@@ -25,7 +25,7 @@ async function clickSurface(page, x, y) {
   await surface.click({ position: { x: box.width * x / 1000, y: box.height * y / 620 } });
 }
 
-async function prepareBlankSketcher(page) {
+test('Sketcher is dataset-independent and supports deterministic editing, history, validation and JSON round-trip', async ({ page }) => {
   await page.addInitScript(() => {
     globalThis.__sketcherDownloadBlob = null;
     const original = URL.createObjectURL.bind(URL);
@@ -38,30 +38,23 @@ async function prepareBlankSketcher(page) {
   await openSketcher(page);
   expect(await page.locator('[data-webgl-host]').count()).toBe(1);
   expect(await page.locator('[data-application-view="SKETCHER"] canvas').count()).toBe(0);
-}
 
-async function verifyWorkingPlanes(page) {
   const plane = page.locator('[data-role="sketcher-plane"]');
   for (const value of ['XZ','YZ','XY']) {
     await plane.selectOption(value);
     expect((await page.evaluate(() => AnalysisWorkspace.getSketcherDraftDocument())).workingPlane).toBe(value);
   }
-}
 
-async function drawConnectedSegments(page) {
   await page.getByRole('button', { name: 'Draw Pipe' }).click();
   await clickSurface(page, 200, 400);
   await clickSurface(page, 400, 400);
   await page.locator('[data-node-id="N002"]').click();
   await clickSurface(page, 400, 250);
-  const draft = await page.evaluate(() => AnalysisWorkspace.getSketcherDraftDocument());
+  let draft = await page.evaluate(() => AnalysisWorkspace.getSketcherDraftDocument());
   expect(draft.nodes).toHaveLength(3);
   expect(draft.segments).toHaveLength(2);
   expect(draft.segments[1].startNodeId).toBe('N002');
-  return draft;
-}
 
-async function verifyRejectedDraws(page) {
   await page.locator('[data-node-id="N001"]').click();
   await page.locator('[data-node-id="N001"]').click();
   await expect(page.locator('[data-role="sketcher-status"]')).toContainText(/zero-length|same node|self-loop/i);
@@ -69,9 +62,7 @@ async function verifyRejectedDraws(page) {
   await page.locator('[data-node-id="N001"]').click();
   await page.locator('[data-node-id="N002"]').click();
   await expect(page.locator('[data-role="sketcher-status"]')).toContainText(/duplicate/i);
-}
 
-async function verifyMoveHistory(page) {
   await page.getByRole('button', { name: 'Move Node' }).click();
   await page.locator('[data-node-id="N003"]').click();
   const beforeMove = await page.evaluate(() => AnalysisWorkspace.getSketcherDraftDocument());
@@ -82,43 +73,29 @@ async function verifyMoveHistory(page) {
   expect((await page.evaluate(() => AnalysisWorkspace.getSketcherDraftDocument())).semanticHash).toBe(beforeMove.semanticHash);
   await page.getByRole('button', { name: 'Redo' }).click();
   expect((await page.evaluate(() => AnalysisWorkspace.getSketcherDraftDocument())).semanticHash).toBe(moved.semanticHash);
-  return moved;
-}
 
-async function verifyDeleteValidationAndRoundTrip(page, moved) {
   await page.getByRole('button', { name: 'Select', exact: true }).click();
   await page.locator('[data-node-id="N002"]').click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(page.locator('[data-role="sketcher-status"]')).toContainText('referenced');
   expect((await page.evaluate(() => AnalysisWorkspace.getSketcherDraftDocument())).semanticHash).toBe(moved.semanticHash);
+
   await page.getByRole('button', { name: 'Validate' }).click();
   await expect(page.locator('[data-role="sketcher-diagnostics"]')).toContainText('CONNECTED_COMPONENT_COUNT');
   await expect(page.locator('[data-role="sketcher-diagnostics"]')).toContainText('DANGLING_ENDPOINT');
-  await verifyJsonRoundTrip(page, moved.semanticHash);
-}
 
-async function verifyJsonRoundTrip(page, exportedHash) {
+  const exportedHash = moved.semanticHash;
   await page.getByRole('button', { name: 'Save Draft JSON' }).click();
   const exportedText = await page.evaluate(async () => globalThis.__sketcherDownloadBlob.text());
   await page.getByRole('button', { name: 'New Draft' }).click();
-  await page.locator('[data-role="sketcher-file"]').setInputFiles({
-    name: 'roundtrip.json', mimeType: 'application/json', buffer: Buffer.from(exportedText),
-  });
+  await page.locator('[data-role="sketcher-file"]').setInputFiles({ name: 'roundtrip.json', mimeType: 'application/json', buffer: Buffer.from(exportedText) });
   await expect.poll(async () => (await page.evaluate(() => AnalysisWorkspace.getSketcherDraftDocument())).semanticHash).toBe(exportedHash);
+
   const surface = page.locator('[data-role="sketcher-surface"]');
   await surface.focus();
   await page.keyboard.press('Control+z');
   await page.keyboard.press('Control+Shift+z');
   await expect(surface).toBeFocused();
-}
-
-test('Sketcher is dataset-independent and supports deterministic editing, history, validation and JSON round-trip', async ({ page }) => {
-  await prepareBlankSketcher(page);
-  await verifyWorkingPlanes(page);
-  await drawConnectedSegments(page);
-  await verifyRejectedDraws(page);
-  const moved = await verifyMoveHistory(page);
-  await verifyDeleteValidationAndRoundTrip(page, moved);
 });
 
 test('Workspace import and successful adoption use the existing dataset boundary exactly once', async ({ page }) => {
