@@ -35,6 +35,7 @@ success &= runCheck('W10.11 Pipe Solver Consumer Static Check', 'npm run check:w
 success &= runCheck('LAFEA.1 Canonical Attachment Foundation Static Check', 'npm run check:lafea.1');
 success &= runCheck('LAFEA.2 Nominal Pipe Section Screening Static Check', 'npm run check:lafea.2');
 success &= runCheck('LAFEA.3 Deterministic 2D Continuum Static Check', 'npm run check:lafea.3');
+success &= runCheck('LAFEA.4 Deterministic 2.5D Thin-Shell Static Check', 'npm run check:lafea.4');
 
 console.log(`\n--- Running Math.random Check ---`);
 function findMathRandom(dir, problems = []) {
