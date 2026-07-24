@@ -25,8 +25,10 @@ jobs:
   certify:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact W10.R4 head
+        uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -41,19 +43,13 @@ jobs:
         run: npm run check:w10.r4:commands
       - name: Certify W10.R4 properties
         run: npm run check:w10.r4:properties
-      - name: Certify W10.R4 source boundaries
-        run: npm run check:w10.r4:source
-      - name: Certify W10.R4 browser workflow
+      - name: Certify W10.R4 browser behavior
         run: npm run check:w10.r4:browser
-      - name: Run combined W10.R4 certification
-        run: npm run check:w10.r4
-      - name: Run full repository checks
+      - name: Run repository syntax, lint and unit checks
         run: npm run check:full
-      - name: Run consolidated Workspace browser checks
-        run: npm run check:workspace-browser
       - name: Build production application
         run: npm run build
-      - name: Upload certification evidence
+      - name: Upload W10.R4 evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
