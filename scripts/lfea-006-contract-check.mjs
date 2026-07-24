@@ -14,4 +14,8 @@ for(const key of ['analysisSummary','qualificationSummary','modelSummary','solve
 assert.equal(review.rawStressReview.authority,'AUTHORITATIVE_RAW_ELEMENT_OR_INTEGRATION_POINT_STRESS');assert.equal(review.projectedStressReview.status,'NOT_SUPPLIED');assert.equal(review.convergenceReview.status,'NOT_SUPPLIED');
 const exported=createEvidenceExport(review,fixture.input,profile);assert.equal(exported.schema,EVIDENCE_EXPORT_SCHEMA);assert.equal(exported.status,'QUALIFIED_EXPORT');assert.ok(Object.isFrozen(exported));assert.equal(validateEvidenceExport(exported).ok,true);assert.ok(exported.files.every((row)=>row.encoding==='UTF-8'&&row.contentHash.startsWith('fnv1a64:')));
 assert.throws(()=>createReviewProfile({...profile,extra:true}),/unsupported fields/);assert.throws(()=>createReviewProfile({...profile,deformationScale:-1}),/nonnegative/);assert.throws(()=>createReviewProfile({...profile,stressDisplayPrecision:13}),/0 through 12/);assert.throws(()=>createReviewInput({...fixture.input,extra:true}),/unsupported fields/);
-console.log(JSON.stringify({reviewHash:review.semanticHash,exportHash:exported.semanticHash,fileCount:exported.totalFileCount}));
+const {semanticHash:_omitted,...missingHash}=fixture.input;assert.throws(()=>createReviewInput(missingHash),/semanticHash is required/);assert.equal(validateReviewInput(missingHash).ok,false);
+assert.throws(()=>createReviewInput({...fixture.input,semanticHash:null}),/semanticHash is required/);
+assert.throws(()=>createReviewInput({...fixture.input,semanticHash:'not-a-semantic-hash'}),/canonical fnv1a64 semantic hash/);
+assert.throws(()=>createReviewInput({...fixture.input,semanticHash:'fnv1a64:0000000000000000'}),/semantic hash mismatch/);
+console.log(JSON.stringify({reviewHash:review.semanticHash,exportHash:exported.semanticHash,fileCount:exported.totalFileCount,hashFailureCases:4}));
