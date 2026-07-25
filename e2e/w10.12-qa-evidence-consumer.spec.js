@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const NAVIGATION = ['Home','Workspace','Load Calc','PCF','Sketcher','3D Calc','Pipe Solver','Reports','QA','Settings','Debug'];
+const NAVIGATION = ['Home','Workspace','Load Calc','PCF','Sketcher','3D Calc','Pipe Solver','Local FEA','Reports','QA','Settings','Debug'];
 const DATASET = {
   schema:'rvm-selected-geometry-workspace-package/v1',
   packageHash:'QA-<img src=x onerror=globalThis.__qaUnsafe=1>',
@@ -55,7 +55,8 @@ test('QA is lazy, dataset-independent, read-only and exports deterministic runti
   expect(evidence.source.schema).toBe('qa-evidence-source/v1');
   expect(evidence.review.schema).toBe('qa-review-model/v1');
   expect(evidence.review.qualityState).toBe('VALID_EMPTY');
-  expect(evidence.source.consumerRows).toHaveLength(11);
+  expect(evidence.source.consumerRows).toHaveLength(12);
+  expect(evidence.source.consumerRows.some((row) => row.consumerId === 'LOCAL_FEA')).toBe(true);
   expect(evidence.source.contractRows.length).toBeGreaterThan(0);
   await expect(page.locator('[data-role="qa-consumer-table"] tbody tr')).toHaveCount(evidence.source.consumerRows.length);
   await expect(page.locator('[data-role="qa-contract-table"] tbody tr')).toHaveCount(evidence.source.contractRows.length);

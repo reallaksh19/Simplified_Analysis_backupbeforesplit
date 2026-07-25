@@ -1,6 +1,7 @@
 import { canonicalStringify, deepFreeze, semanticHash } from '../shared-piping-model/index.js';
 import {
-  APPLICATION_NAVIGATION_ORDER_V9, CONTRACT_KEYS,
+  APPLICATION_NAVIGATION_ORDER_V9, APPLICATION_NAVIGATION_ORDER_V10, CONTRACT_KEYS,
+  WORKSPACE_CONSUMER_REGISTRY_V10_SCHEMA,
   validateWorkspaceConsumerContext, validateWorkspaceConsumerReadiness, validateWorkspaceConsumerReadinessShape,
   validateWorkspaceConsumerRegistry,
 } from '../workspace-consumers/index.js';
@@ -30,13 +31,12 @@ export function createQaEvidenceSource(input = {}) {
   if (!validation.ok) throw new TypeError(`QA evidence source is invalid: ${validation.errors.join(' ')}`);
   return source;
 }
-
 function assertRegistry(registry) {
   const validation = validateWorkspaceConsumerRegistry(registry);
   if (!validation.ok) throw new TypeError(`QA registry evidence is invalid: ${validation.errors.join(' ')}`);
   const ids = registry.consumers.map((row) => row.consumerId);
   if (ids.length !== new Set(ids).size) throw new TypeError('QA registry contains duplicate consumer identities.');
-  if (canonicalStringify([...ids].sort()) !== canonicalStringify([...APPLICATION_NAVIGATION_ORDER_V9].sort())) throw new TypeError('QA registry consumer identities are incomplete or unknown.');
+  if (canonicalStringify([...ids].sort()) !== canonicalStringify([...navigationOrder(registry)].sort())) throw new TypeError('QA registry consumer identities are incomplete or unknown.');
 }
 function assertContext(context) {
   if (context === null) return;
@@ -60,12 +60,7 @@ function assertReadiness(registry, context, rows) {
   });
 }
 function registryReference(registry) {
-  return deepFreeze({
-    schema: registry.schema, semanticHash: registry.semanticHash,
-    consumerCount: registry.consumers.length,
-    consumerIds: APPLICATION_NAVIGATION_ORDER_V9,
-    validationState: 'VALID',
-  });
+  return deepFreeze({ schema:registry.schema, semanticHash:registry.semanticHash, consumerCount:registry.consumers.length, consumerIds:navigationOrder(registry), validationState:'VALID' });
 }
 function contextReference(context) {
   if (!context) return deepFreeze({ schema:null,contextId:null,semanticHash:null,datasetId:null,workspaceVersion:0,availableContractCount:0,invalidContractCount:0,unavailableContractCount:CONTRACT_KEYS.length,diagnosticCount:0,validationState:'VALID_EMPTY' });
@@ -78,3 +73,4 @@ function contextReference(context) {
     diagnosticCount: context.diagnostics.length, validationState: 'VALID',
   });
 }
+function navigationOrder(registry) { return registry?.schema === WORKSPACE_CONSUMER_REGISTRY_V10_SCHEMA ? APPLICATION_NAVIGATION_ORDER_V10 : APPLICATION_NAVIGATION_ORDER_V9; }

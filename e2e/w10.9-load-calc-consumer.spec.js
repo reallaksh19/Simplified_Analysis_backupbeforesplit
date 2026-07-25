@@ -6,7 +6,7 @@ const STAGED_PACKAGE={schema:'inputxml-managed-stage/v1',packageHash:'W10.9-BROW
   {id:'PIPES',name:'Pipes',type:'BRANCH',children:[pipe('PIPE-A',[0,0,0],[1000,0,0]),pipe('PIPE-B',[1000,0,0],[2000,0,0])]},
   {id:'SUPPORTS',name:'Supports',type:'GROUP',children:[support('SUP-START',[0,0,0],'PIPE-A:port:start'),support('SUP-END',[2000,0,0],'PIPE-B:port:end')]},
 ]};
-const NAVIGATION=['Home','Workspace','Load Calc','PCF','Sketcher','3D Calc','Pipe Solver','Reports','QA','Settings','Debug'];
+const NAVIGATION=['Home','Workspace','Load Calc','PCF','Sketcher','3D Calc','Pipe Solver','Local FEA','Reports','QA','Settings','Debug'];
 const REQUEST_TOPICS=['modelLoad:rebuildRequested','supportLoadScreening:runRequested','applicationView:changeRequested'];
 
 test.beforeEach(async({page})=>{await page.addInitScript(()=>{
@@ -51,7 +51,7 @@ test('adopts exact W10.4 evidence and delegates optional W10.5 actions',async({p
   expect(await page.evaluate(()=>AnalysisWorkspace.getLoadCalculationReviewModel().schema)).toBe('load-calculation-review-model/v1');
   expect(await page.evaluate(()=>AnalysisWorkspace.listWorkspaceConsumers().find((row)=>row.consumerId==='LOAD_CALC').implementationStatus)).toBe('IMPLEMENTED');
   expect(await page.evaluate(()=>AnalysisWorkspace.getWorkspaceConsumerReadiness('LOAD_CALC').readinessState)).toBe('AVAILABLE');
-  expect(await page.evaluate(()=>AnalysisWorkspace.getApplicationViewState().schema)).toBe('application-view-state/v7');
+  expect(await page.evaluate(()=>AnalysisWorkspace.getApplicationViewState().schema)).toBe('application-view-state/v10');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
 
   await page.getByRole('button',{name:'Rebuild Model Loads'}).click();

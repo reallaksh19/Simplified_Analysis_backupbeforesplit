@@ -6,7 +6,7 @@ const STAGED_PACKAGE={schema:'inputxml-managed-stage/v1',packageHash:'W10.10-BRO
   {id:'PIPES',name:'Pipes',type:'BRANCH',children:[pipe('PIPE-A',[0,0,0],[1000,0,0]),pipe('PIPE-B',[1000,0,0],[2000,0,0])]},
   {id:'SUPPORTS',name:'Supports',type:'GROUP',children:[support('SUP-START',[0,0,0],'PIPE-A:port:start'),support('SUP-END',[2000,0,0],'PIPE-B:port:end')]},
 ]};
-const NAVIGATION=['Home','Workspace','Load Calc','PCF','Sketcher','3D Calc','Pipe Solver','Reports','QA','Settings','Debug'];
+const NAVIGATION=['Home','Workspace','Load Calc','PCF','Sketcher','3D Calc','Pipe Solver','Local FEA','Reports','QA','Settings','Debug'];
 const REQUEST_TOPICS=['sharedModel:exportRequested','topology:rebuildExactRequested','topology:exportRequested','supportRestraint:rebuildEvidenceRequested','supportRestraint:exportRequested','verticalBeam:rebuildRequested','verticalBeam:solveRequested','verticalBeam:exportRequested','applicationView:changeRequested'];
 
 test.beforeEach(async({page})=>{await page.addInitScript(()=>{
@@ -47,7 +47,7 @@ test('adopts exact model/topology/support evidence and delegates guarded actions
   expect(await page.evaluate(()=>AnalysisWorkspace.getThreeDCalculationReviewModel().schema)).toBe('three-d-calculation-review-model/v1');
   expect(await page.evaluate(()=>AnalysisWorkspace.listWorkspaceConsumers().find((row)=>row.consumerId==='THREE_D_CALC').implementationStatus)).toBe('IMPLEMENTED');
   expect(await page.evaluate(()=>AnalysisWorkspace.getWorkspaceConsumerReadiness('THREE_D_CALC').readinessState)).toBe('AVAILABLE');
-  expect(await page.evaluate(()=>AnalysisWorkspace.getApplicationViewState().schema)).toBe('application-view-state/v7');
+  expect(await page.evaluate(()=>AnalysisWorkspace.getApplicationViewState().schema)).toBe('application-view-state/v10');
   expect(await page.locator('[data-webgl-host]').count()).toBe(1);
   expect(await page.locator('[data-application-view="THREE_D_CALC"] canvas').count()).toBe(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
