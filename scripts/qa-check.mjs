@@ -36,6 +36,7 @@ success &= runCheck('LAFEA.1 Canonical Attachment Foundation Static Check', 'npm
 success &= runCheck('LAFEA.2 Nominal Pipe Section Screening Static Check', 'npm run check:lafea.2');
 success &= runCheck('LAFEA.3 Deterministic 2D Continuum Static Check', 'npm run check:lafea.3');
 success &= runCheck('LAFEA.4 Deterministic 2.5D Thin-Shell Static Check', 'npm run check:lafea.4');
+success &= runCheck('LAFEA.5 Trunnion Footprint Shell Workflow Static Check', 'npm run check:lafea.5');
 
 console.log(`\n--- Running Math.random Check ---`);
 function findMathRandom(dir, problems = []) {
