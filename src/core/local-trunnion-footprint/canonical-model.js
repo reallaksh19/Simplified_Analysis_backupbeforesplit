@@ -183,6 +183,7 @@ function canonicalLimitations(source) {
   return values;
 }
 
+
 function assertCanonicalModelOrdering(model) {
   assertSorted(model.canonicalLoadCaseMappings, 'workflowLoadCaseId', 'canonicalLoadCaseMappings');
   assertSorted(model.canonicalAssessmentRegions, 'regionId', 'canonicalAssessmentRegions');
