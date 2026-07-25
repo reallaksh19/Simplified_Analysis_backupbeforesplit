@@ -1,0 +1,40 @@
+name: W10.12 Package Synchronizer
+
+on:
+  push:
+    branches:
+      - agent/w10.12-qa-evidence-consumer
+    paths:
+      - '.github/workflows/w10-12-package-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  synchronize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/w10.12-qa-evidence-consumer
+          fetch-depth: 0
+      - name: Restore exact package and add W10.12 commands
+        run: |
+          git show c49749f447880261eb2126b3dd6046faa67ce88f:package.json > /tmp/package.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const packageJson = JSON.parse(fs.readFileSync('/tmp/package.json', 'utf8'));
+          Object.assign(packageJson.scripts, {
+            'check:w10.12:contracts': 'node scripts/w10.12-qa-evidence-contract-check.mjs',
+            'check:w10.12:properties': 'node scripts/w10.12-qa-evidence-property-check.mjs',
+            'check:w10.12:source': 'node scripts/w10.12-qa-evidence-source-guard.mjs && node scripts/w10.12-registration-check.mjs',
+            'check:w10.12:browser': 'playwright test e2e/w10.12-qa-evidence-consumer.spec.js',
+            'check:w10.12': 'npm run check:w10.12:contracts && npm run check:w10.12:properties && npm run check:w10.12:source && npm run check:w10.12:browser',
+          });
+          fs.writeFileSync('package.json', `${JSON.stringify(packageJson, null, 2)}\n`);
+          NODE
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add package.json
+          git commit -m 'fix: restore package formatting and W10.12 registrations'
+          git push origin HEAD:agent/w10.12-qa-evidence-consumer
