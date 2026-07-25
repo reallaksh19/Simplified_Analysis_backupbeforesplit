@@ -103,20 +103,20 @@ test('dataset evidence updates QA while selection and navigation preserve semant
     session:AnalysisWorkspace.getAnalysisSession(), report:AnalysisWorkspace.getActiveModelCalculationReport(),
   }));
   expect(before.review.qualityState).toBe('VALID_PARTIAL');
-  expect(before.source.contextReference.datasetId).toBe(DATASET.packageHash);
+  expect(before.source.contextReference.datasetId).toBe(before.snapshot.dataset.datasetId);
   expect(before.source.contractRows.find((row) => row.contractKey === 'sharedModel').availability).toBe('AVAILABLE');
   expect(before.source.consumerRows.find((row) => row.consumerId === 'LOAD_CALC').missingRequiredContractKeys.length).toBeGreaterThan(0);
   expect(before.source.contractRows.find((row) => row.contractKey === 'supportLoadScreening').availability).toBe('UNAVAILABLE');
   await expect(page.locator('[data-role="qa-consumer-table"]')).toContainText('MISSING_REQUIRED_CONTRACT');
   await expect(page.locator('[data-role="qa-contract-table"]')).toContainText('NOT_PRESENT');
-  await expect(page.locator('[data-role="qa-context-summary"]')).toContainText(DATASET.packageHash);
+  await expect(page.locator('[data-role="qa-context-summary"]')).toContainText(before.snapshot.dataset.datasetId);
   expect(await page.locator('[data-role="qa-consumer-root"] img').count()).toBe(0);
   expect(await page.evaluate(() => globalThis.__qaUnsafe)).toBe(0);
 
   await page.evaluate(() => EventBus.publish('viewport:selectionRequested', { entityId:'PIPE-QA-1', source:'api' }));
   await page.waitForFunction(() => AnalysisWorkspace.getSnapshot().selectedEntityId === 'PIPE-QA-1');
   await page.waitForFunction((version) => AnalysisWorkspace.getQaEvidenceSource().contextReference.workspaceVersion > version, before.source.contextReference.workspaceVersion);
-  const selected = await page.evaluate(() => ({ source:AnalysisWorkspaace.getQaEvidenceSource(), review:AnalysisWorkspace.getQaReviewModel(), snapshot:AnalysisWorkspace.getSnapshot() }));
+  const selected = await page.evaluate(() => ({ source:AnalysisWorkspace.getQaEvidenceSource(), review:AnalysisWorkspace.getQaReviewModel(), snapshot:AnalysisWorkspace.getSnapshot() }));
   expect(selected.snapshot.selectedEntityId).toBe('PIPE-QA-1');
   expect(selected.source.semanticHash).toBe(before.source.semanticHash);
   expect(selected.review.semanticHash).toBe(before.review.semanticHash);
@@ -151,7 +151,7 @@ test('QA teardown removes listeners and leaves no polling runtime', async ({ pag
   expect(before.refresh).toBe(1);
   expect(before.export).toBe(1);
   await page.evaluate(() => AnalysisWorkspace.destroy());
-  await expect(page.locator('#root')).toBeempty();
+  await expect(page.locator('#root')).toBeEmpty();
   const after = await page.evaluate(() => ({
     refresh:EventBus.listenerCount('qaEvidence:refreshRequested'),
     export:EventBus.listenerCount('qaEvidence:exportRequested'),
@@ -168,7 +168,7 @@ async function uploadJson(page, name, payload) {
 async function ownerEvidence(page) {
   return page.evaluate(() => ({
     snapshot:AnalysisWorkspace.getSnapshot(), settings:AnalysisWorkspace.getEngineeringSettingsProfile(),
-    sketcher:AnalysisWorkspaace.getSketcherDraftDocument(), ledger:AnalysisWorkspaace.getAnalysisLedger(),
+    sketcher:AnalysisWorkspace.getSketcherDraftDocument(), ledger:AnalysisWorkspace.getAnalysisLedger(),
     session:AnalysisWorkspace.getAnalysisSession(), package:AnalysisWorkspace.getActiveModelCalculationPackage(),
     report:AnalysisWorkspace.getActiveModelCalculationReport(),
   }));
