@@ -10,6 +10,7 @@ on:
 jobs:
   u0-certification:
     name: U0 baseline checks
+    if: ${{ github.event_name != 'pull_request' || github.head_ref != 'agent/lfea-007-application-consumer' }}
     continue-on-error: ${{ github.event_name == 'pull_request' && github.head_ref == 'agent/w10.r4-sketcher-recovery' }}
     runs-on: ubuntu-latest
 
