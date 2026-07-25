@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import {
-  CONSUMER_IDS, APPLICATION_NAVIGATION_ORDER_V9,
+  CONSUMER_IDS, APPLICATION_NAVIGATION_ORDER_V9, APPLICATION_NAVIGATION_ORDER_V10,
   createApplicationViewState, createApplicationViewStateV2, createApplicationViewStateV3, createApplicationViewStateV4,
   createApplicationViewStateV5, createApplicationViewStateV6, createApplicationViewStateV7, createApplicationViewStateV8,
+  createApplicationViewStateV9, createApplicationViewStateV10,
   createWorkspaceConsumerContext, createWorkspaceConsumerReadinessRegistry,
   createWorkspaceConsumerRegistry, createWorkspaceConsumerRegistryV2, createWorkspaceConsumerRegistryV3,
   createWorkspaceConsumerRegistryV4, createWorkspaceConsumerRegistryV5, createWorkspaceConsumerRegistryV6,
   createWorkspaceConsumerRegistryV7, createWorkspaceConsumerRegistryV8, createWorkspaceConsumerRegistryV9,
-  validateWorkspaceConsumerRegistryV9,
+  createWorkspaceConsumerRegistryV10, validateWorkspaceConsumerRegistryV9, validateWorkspaceConsumerRegistryV10,
 } from '../src/core/workspace-consumers/index.js';
 import {
   createInitialLfeaConsumerProfile, createLfeaConsumerProfile, validateLfeaConsumerProfile,
@@ -73,11 +74,22 @@ factories.forEach((factory,index) => {
   const readiness=createWorkspaceConsumerReadinessRegistry(registryValue,context,{workspaceBooted:true,settingsAuthorityInitialized:true,settingsDefinitionsAvailable:true,settingsProfileValid:true});
   assert.equal(semanticHash(stateFactories[index](readiness)),EXPECTED_VIEW_STATE_HASHES[index],`view state v${index+1} changed`);
 });
-const registry = createWorkspaceConsumerRegistryV9();
-assert(validateWorkspaceConsumerRegistryV9(registry).ok);
+const registryV9 = createWorkspaceConsumerRegistryV9();
+assert(validateWorkspaceConsumerRegistryV9(registryV9).ok);
+assert.equal(registryV9.consumers.length, 11);
+assert.equal(registryV9.consumers.some((row) => row.consumerId === CONSUMER_IDS.LOCAL_FEA), false);
+assert.equal(registryV9.consumers.find((row) => row.consumerId === CONSUMER_IDS.QA).implementationStatus, 'IMPLEMENTED');
+assert.deepEqual(APPLICATION_NAVIGATION_ORDER_V9, ['HOME','WORKSPACE','LOAD_CALC','PCF','SKETCHER','THREE_D_CALC','PIPE_SOLVER','REPORTS','QA','SETTINGS','DEBUG']);
+const readinessV9=createWorkspaceConsumerReadinessRegistry(registryV9,context,{workspaceBooted:true,settingsAuthorityInitialized:true,settingsDefinitionsAvailable:true,settingsProfileValid:true});
+assert.equal(createApplicationViewStateV9(readinessV9).schema,'application-view-state/v9');
+
+const registry = createWorkspaceConsumerRegistryV10();
+assert(validateWorkspaceConsumerRegistryV10(registry).ok);
 assert.equal(registry.consumers.length, 12);
 assert.equal(registry.consumers.filter((row) => row.consumerId === CONSUMER_IDS.LOCAL_FEA).length, 1);
-assert.deepEqual(APPLICATION_NAVIGATION_ORDER_V9, ['HOME','WORKSPACE','LOAD_CALC','PCF','SKETCHER','THREE_D_CALC','PIPE_SOLVER','LOCAL_FEA','REPORTS','QA','SETTINGS','DEBUG']);
+assert.deepEqual(APPLICATION_NAVIGATION_ORDER_V10, ['HOME','WORKSPACE','LOAD_CALC','PCF','SKETCHER','THREE_D_CALC','PIPE_SOLVER','LOCAL_FEA','REPORTS','QA','SETTINGS','DEBUG']);
+const readinessV10=createWorkspaceConsumerReadinessRegistry(registry,context,{workspaceBooted:true,settingsAuthorityInitialized:true,settingsDefinitionsAvailable:true,settingsProfileValid:true});
+assert.equal(createApplicationViewStateV10(readinessV10).schema,'application-view-state/v10');
 const descriptor = registry.consumers.find((row) => row.consumerId === CONSUMER_IDS.LOCAL_FEA);
 assert.deepEqual(descriptor.requiredContractKeys, []);
 assert.deepEqual(descriptor.optionalContractKeys, []);
@@ -88,4 +100,4 @@ assert.deepEqual(descriptor.allowedActions, [
   'SELECT_LFEA_REVIEW_RECORD','SELECT_LFEA_REVIEW_SECTION','SET_LFEA_LAYER_VISIBILITY',
   'SET_LFEA_RESULT_MODE','SET_LFEA_STRESS_COMPONENT','SET_LFEA_TABLE_PAGE',
 ]);
-console.log('LFEA-007 contract qualification passed (profile, session, view model, registry v1-v9 and view-state v1-v9).');
+console.log('LFEA-007 contract qualification passed (profile, session, view model, registry v1-v10 and view-state v1-v10).');
