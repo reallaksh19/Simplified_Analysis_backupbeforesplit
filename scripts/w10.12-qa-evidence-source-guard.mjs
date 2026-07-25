@@ -7,6 +7,7 @@ import { parse } from '@babel/parser';
 const BASE_SHA='c49749f447880261eb2126b3dd6046faa67ce88f';
 const W10_12_MERGED_SHA='1a64c89391ba0e4afead78de43e0ec7e82491a60';
 const root=process.cwd();
+ensureCommit(W10_12_MERGED_SHA);
 const successorMode=isAncestor(W10_12_MERGED_SHA,'HEAD');
 const scopeBase=successorMode?W10_12_MERGED_SHA:resolveScopeBase();
 const changed=gitLines(['diff','--name-only',scopeBase,'HEAD']);
@@ -22,18 +23,13 @@ const implementationAllowed=[
   /^\.github\/workflows\/w10-12-qa-evidence-certification\.yml$/,
   /^package\.json$/,
 ];
-const successorQaAllowed=new Set([
-  'src/core/qa-evidence/consumer-rows.js',
-  'src/core/qa-evidence/source.js',
-  'src/core/qa-evidence/validation.js',
-]);
+const successorQaAllowed=new Set(['src/core/qa-evidence/consumer-rows.js','src/core/qa-evidence/source.js','src/core/qa-evidence/validation.js']);
 if(!successorMode){
   changed.forEach((file)=>{if(!implementationAllowed.some((rule)=>rule.test(file)))errors.push(`Disallowed W10.12 changed path: ${file}`);});
   for(const forbidden of ['package-lock.json','scripts/qa-check.mjs','.github/workflows/phase-u0-certification.yml','.github/workflows/release-candidate-certification.yml'])if(changed.includes(forbidden))errors.push(`${forbidden} must not change in W10.12.`);
   addedJavaScript().forEach(validateAddedJavaScript);
 }else{
-  const protectedChanges=changed.filter((file)=>file.startsWith('src/core/qa-evidence/')&&!successorQaAllowed.has(file));
-  protectedChanges.forEach((file)=>errors.push(`Successor work changed protected W10.12 QA implementation path: ${file}`));
+  changed.filter((file)=>file.startsWith('src/core/qa-evidence/')&&!successorQaAllowed.has(file)).forEach((file)=>errors.push(`Successor work changed protected W10.12 QA implementation path: ${file}`));
 }
 for(const file of productionFiles())validateProductionFile(file);
 for(const file of coreFiles())validateCoreFile(file);
