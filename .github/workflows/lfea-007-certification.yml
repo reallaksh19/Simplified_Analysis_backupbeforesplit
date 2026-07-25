@@ -1,25 +1,43 @@
 name: LFEA-007 implementation publisher
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - agent/lfea-007-application-consumer
   workflow_dispatch:
+
+concurrency:
+  group: lfea-007-implementation-publisher
+  cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
   publish-implementation:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout exact staging head
+      - name: Checkout exact staging branch
         uses: actions/checkout@v4
         with:
           ref: agent/lfea-007-application-consumer
           fetch-depth: 0
+      - name: Detect staged implementation
+        id: staged
+        shell: bash
+        run: |
+          if [[ -f scripts/lfea-007-bootstrap-part-00.txt ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Verify and extract implementation payload
+        if: steps.staged.outputs.present == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -28,6 +46,7 @@ jobs:
           tar -xzf /tmp/lfea007-impl.tar.gz -C .
           rm scripts/lfea-007-bootstrap-part-{00..04}.txt
       - name: Publish exact implementation head
+        if: steps.staged.outputs.present == 'true'
         shell: bash
         run: |
           set -euo pipefail
