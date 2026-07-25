@@ -69,9 +69,25 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "feat(lfea-007): implement read-only Local FEA application consumer"
+          git rev-parse HEAD > /tmp/lfea-007-implementation-head.txt
+      - name: Capture implementation commit identity
+        if: steps.staged.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lfea-007-implementation-head
+          path: /tmp/lfea-007-implementation-head.txt
+          retention-days: 1
       - name: Push implementation head
         if: steps.staged.outputs.present == 'true'
         shell: bash
         run: |
-          set -euo pipefail
-          git push origin HEAD:agent/lfea-007-application-consumer
+          set -o pipefail
+          git push origin HEAD:agent/lfea-007-application-consumer 2>&1 | tee /tmp/lfea-007-push.log
+      - name: Capture push diagnostics
+        if: always() && steps.staged.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lfea-007-push-diagnostics
+          path: /tmp/lfea-007-push.log
+          if-no-files-found: ignore
+          retention-days: 1
