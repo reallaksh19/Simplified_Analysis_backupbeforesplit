@@ -22,13 +22,13 @@ for(const file of files){
   assert.equal(new Set(exports).size,exports.length,`${file} duplicate named exports`);
 }
 if(fs.existsSync(path.join(root,'.git'))){
-  const baseline='c49749f447880261eb2126b3dd6046faa67ce88f';
-  let baselineAvailable=true;
-  try{execFileSync('git',['cat-file','-e',`${baseline}^{commit}`],{stdio:'ignore'});}catch{baselineAvailable=false;}
-  if(baselineAvailable){
-    const changed=execFileSync('git',['diff','--name-only',`${baseline}...HEAD`],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
-    const allowed=(file)=>file.startsWith('src/core/local-trunnion-footprint/')||file.startsWith('scripts/lafea.5-')||file.startsWith('docs/local-trunnion-footprint/')||file==='package.json'||file==='scripts/qa-check.mjs';
-    assert.ok(changed.every(allowed),`Out-of-scope paths: ${changed.filter((file)=>!allowed(file)).join(', ')}`);
-  }
+  const baseline='7e12954f2923c2df574bf94cb0d94811c813d463';
+  assert.doesNotThrow(
+    ()=>execFileSync('git',['cat-file','-e',`${baseline}^{commit}`],{stdio:'ignore'}),
+    `Accepted baseline ${baseline} is unavailable; exact-baseline containment cannot be certified.`,
+  );
+  const changed=execFileSync('git',['diff','--name-only',`${baseline}...HEAD`],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
+  const allowed=(file)=>file.startsWith('src/core/local-trunnion-footprint/')||file.startsWith('scripts/lafea.5-')||file.startsWith('docs/local-trunnion-footprint/')||file==='package.json'||file==='scripts/qa-check.mjs';
+  assert.ok(changed.every(allowed),`Out-of-scope paths: ${changed.filter((file)=>!allowed(file)).join(', ')}`);
 }
 console.log('LAFEA.5 source size, public dependency, runtime hygiene and allowlist checks passed.');
