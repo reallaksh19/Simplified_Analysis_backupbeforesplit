@@ -1,0 +1,69 @@
+name: MASR-01 Branch Bootstrap
+
+on:
+  push:
+    branches:
+      - agent/masr-01-shell-icon-navigation
+    paths:
+      - '.github/workflows/masr-01-branch-bootstrap.yml'
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/masr-01-shell-icon-navigation
+          fetch-depth: 2
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Materialize reviewed MASR-01 payload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/reallaksh19/Simplified_Analysis/issues/171 --jq .body > /tmp/masr-01-payload.b64
+          base64 --decode /tmp/masr-01-payload.b64 | tar -xJf -
+          git show 7e12954f2923c2df574bf94cb0d94811c813d463:package.json > /tmp/package.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const packageJson=JSON.parse(fs.readFileSync('/tmp/package.json','utf8'));
+          Object.assign(packageJson.scripts,{
+            'check:masr.01:contracts':'node scripts/masr-01-shell-contract-check.mjs',
+            'check:masr.01:properties':'node scripts/masr-01-shell-property-check.mjs',
+            'check:masr.01:source':'node scripts/masr-01-shell-source-guard.mjs && node scripts/masr-01-registration-check.mjs',
+            'check:masr.01:browser':'playwright test e2e/masr-01-shell-navigation.spec.js',
+            'check:masr.01':'npm run check:masr.01:contracts && npm run check:masr.01:properties && npm run check:masr.01:source && npm run check:masr.01:browser',
+          });
+          fs.writeFileSync('package.json',`${JSON.stringify(packageJson,null,2)}\n`);
+          NODE
+      - name: Commit reviewed implementation
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .
+          git commit -m 'feat(masr-01): recover shell icon and navigation integrity'
+          git push origin HEAD:agent/masr-01-shell-icon-navigation
+      - run: npm ci
+      - name: Run early MASR-01 static certification
+        run: |
+          npm run check:masr.01:contracts
+          npm run check:masr.01:properties
+          npm run check:masr.01:source
+      - name: Build production shell
+        env:
+          VITE_BUILD_SHA: ${{ github.sha }}
+        run: npm run build
+      - name: Upload exact workspace
+        uses: actions/upload-artifact@v4
+        with:
+          name: masr-01-bootstrap-workspace
+          path: .
+          include-hidden-files: true
+          retention-days: 1
