@@ -1,0 +1,51 @@
+import { LFEA_SELECTION_TYPES } from './constants.js';
+
+const TABLE_SELECTION_TYPES = Object.freeze({
+  nodes:'NODE',
+  elements:'ELEMENT',
+  loads:'LOAD',
+  constraints:'CONSTRAINT',
+  displacements:'NODE',
+  reactions:'REACTION',
+  rawStress:'RAW_STRESS_LOCATION',
+  projectedStress:'PROJECTED_STRESS_LOCATION',
+  convergence:'CONVERGENCE_QUANTITY',
+  suppliedFiles:'SUPPLIED_FILE',
+});
+
+export function compareLfeaIdentity(left, right) {
+  const a = String(left ?? '');
+  const b = String(right ?? '');
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+export function lfeaSelectionForTable(tableId, row) {
+  const type = TABLE_SELECTION_TYPES[tableId];
+  if (!type) return null;
+  return Object.freeze({ type, identity:lfeaSelectionIdentity(type, row), tableId });
+}
+
+export function lfeaSelectionIdentity(type, row) {
+  if (!LFEA_SELECTION_TYPES.includes(type) || !row || typeof row !== 'object') {
+    throw new TypeError('Canonical Local FEA selection requires a supported type and record.');
+  }
+  const identities = {
+    NODE: () => required(row.nodeId, 'nodeId'),
+    ELEMENT: () => required(row.elementId, 'elementId'),
+    LOAD: () => required(row.loadId, 'loadId'),
+    CONSTRAINT: () => required(row.constraintId, 'constraintId'),
+    REACTION: () => row.reactionId || joined(row.nodeId, row.component),
+    RAW_STRESS_LOCATION: () => joined(row.elementId, row.resultLocationId),
+    PROJECTED_STRESS_LOCATION: () => projectedIdentity(row),
+    CONVERGENCE_QUANTITY: () => required(row.quantityId || row.levelId, 'quantityId or levelId'),
+    SUPPLIED_FILE: () => required(row.path, 'path'),
+  };
+  return identities[type]();
+}
+
+function projectedIdentity(row) {
+  if (row.projectionPatchId) return joined(row.nodeId, row.projectionPatchId, row.stressComponent);
+  return joined(row.elementId, row.cornerId);
+}
+function joined(...values) { return values.map((value) => required(value, 'selection identity component')).join(':'); }
+function required(value, name) { if (typeof value !== 'string' || !value.trim()) throw new TypeError(`Local FEA ${name} is required for selection.`); return value; }
