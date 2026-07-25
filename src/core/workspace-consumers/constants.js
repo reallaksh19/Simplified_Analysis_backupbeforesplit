@@ -7,6 +7,7 @@ export const WORKSPACE_CONSUMER_REGISTRY_V5_SCHEMA = 'workspace-consumer-registr
 export const WORKSPACE_CONSUMER_REGISTRY_V6_SCHEMA = 'workspace-consumer-registry/v6';
 export const WORKSPACE_CONSUMER_REGISTRY_V7_SCHEMA = 'workspace-consumer-registry/v7';
 export const WORKSPACE_CONSUMER_REGISTRY_V8_SCHEMA = 'workspace-consumer-registry/v8';
+export const WORKSPACE_CONSUMER_REGISTRY_V9_SCHEMA = 'workspace-consumer-registry/v9';
 export const WORKSPACE_CONSUMER_READINESS_SCHEMA = 'workspace-consumer-readiness/v1';
 export const APPLICATION_VIEW_STATE_SCHEMA = 'application-view-state/v1';
 export const APPLICATION_VIEW_STATE_V2_SCHEMA = 'application-view-state/v2';
@@ -16,6 +17,7 @@ export const APPLICATION_VIEW_STATE_V5_SCHEMA = 'application-view-state/v5';
 export const APPLICATION_VIEW_STATE_V6_SCHEMA = 'application-view-state/v6';
 export const APPLICATION_VIEW_STATE_V7_SCHEMA = 'application-view-state/v7';
 export const APPLICATION_VIEW_STATE_V8_SCHEMA = 'application-view-state/v8';
+export const APPLICATION_VIEW_STATE_V9_SCHEMA = 'application-view-state/v9';
 
 export const CONTRACT_KEYS = Object.freeze([
   'sharedModel','topologyGraph','topologyAudit','supportAttachmentModel','supportAttachmentAudit',
@@ -39,3 +41,5 @@ export const APPLICATION_NAVIGATION_ORDER_V7 = APPLICATION_NAVIGATION_ORDER_V6;
 export const APPLICATION_VIEW_IDS_V7 = APPLICATION_NAVIGATION_ORDER_V7;
 export const APPLICATION_NAVIGATION_ORDER_V8 = APPLICATION_NAVIGATION_ORDER_V7;
 export const APPLICATION_VIEW_IDS_V8 = APPLICATION_NAVIGATION_ORDER_V8;
+export const APPLICATION_NAVIGATION_ORDER_V9 = APPLICATION_NAVIGATION_ORDER_V8;
+export const APPLICATION_VIEW_IDS_V9 = APPLICATION_NAVIGATION_ORDER_V9;
