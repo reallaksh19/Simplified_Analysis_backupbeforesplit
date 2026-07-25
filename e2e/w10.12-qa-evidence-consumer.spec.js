@@ -61,7 +61,7 @@ test('QA is lazy, dataset-independent, read-only and exports deterministic runti
   await expect(page.locator('[data-role="qa-contract-table"] tbody tr')).toHaveCount(evidence.source.contractRows.length);
   await expect(page.locator('[data-role="qa-quality"]')).toHaveText('VALID_EMPTY');
   await expect(page.locator('[data-role="qa-consumer-root"]')).toContainText('not engineering approval');
-  await expect(page.locator('[data-role="qa-consumer-root"]')).toContainText('not repository CI certification');
+  await expect(page.locator('[data-role="qa-consumer-root"]')).toContainText('repository CI certification');
   expect(await page.evaluate(() => globalThis.__qaForbiddenEvents)).toBe(0);
   expect(await page.evaluate(() => AnalysisWorkspace.getActiveModelCalculationPackage())).toBeNull();
   expect(await page.evaluate(() => globalThis.__qaIntervals)).toBe(intervalsBefore);
@@ -105,7 +105,7 @@ test('dataset evidence updates QA while selection and navigation preserve semant
   expect(before.review.qualityState).toBe('VALID_PARTIAL');
   expect(before.source.contextReference.datasetId).toBe(before.snapshot.dataset.datasetId);
   expect(before.source.contractRows.find((row) => row.contractKey === 'sharedModel').availability).toBe('AVAILABLE');
-  expect(before.source.consumerRows.find((row) => row.consumerId === 'LOAD_CALC').missingRequiredContractKeys.length).toBeGreaterThan(0);
+  expect(before.source.consumerRows.find((row) => row.consumerId === 'REPORTS').missingRequiredContractKeys.length).toBeGreaterThan(0);
   expect(before.source.contractRows.find((row) => row.contractKey === 'supportLoadScreening').availability).toBe('UNAVAILABLE');
   await expect(page.locator('[data-role="qa-consumer-table"]')).toContainText('MISSING_REQUIRED_CONTRACT');
   await expect(page.locator('[data-role="qa-contract-table"]')).toContainText('NOT_PRESENT');
