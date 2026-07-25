@@ -138,7 +138,12 @@
     "ci:v13": "npm run ci:v12 && npm run check:v13 && npm run check:v13:behavior && npm run check:qa && npm run check:benchmarks && npm run build",
     "ci:v14": "npm run ci:v13 && npm run check:v14 && npm run check:v14:behavior && npm run check:benchmarks && npm run build",
     "ci:v15": "npm run ci:v14 && npm run check:v15 && npm run check:v15:behavior && npm run check:benchmarks && npm run build",
-    "ci:v16": "npm run ci:v15 && npm run check:v16 && npm run check:v16:behavior && npm run check:qa && npm run check:benchmarks && npm run build"
+    "ci:v16": "npm run ci:v15 && npm run check:v16 && npm run check:v16:behavior && npm run check:qa && npm run check:benchmarks && npm run build",
+    "check:w10.12:contracts": "node scripts/w10.12-qa-evidence-contract-check.mjs",
+    "check:w10.12:properties": "node scripts/w10.12-qa-evidence-property-check.mjs",
+    "check:w10.12:source": "node scripts/w10.12-qa-evidence-source-guard.mjs && node scripts/w10.12-registration-check.mjs",
+    "check:w10.12:browser": "playwright test e2e/w10.12-qa-evidence-consumer.spec.js",
+    "check:w10.12": "npm run check:w10.12:contracts && npm run check:w10.12:properties && npm run check:w10.12:source && npm run check:w10.12:browser"
   },
   "dependencies": {
     "@react-spring/three": "^10.0.3",

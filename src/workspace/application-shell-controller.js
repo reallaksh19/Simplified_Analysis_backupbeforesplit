@@ -1,8 +1,8 @@
 import {
-  APPLICATION_NAVIGATION_ORDER_V8, CONSUMER_IDS, IMPLEMENTATION_STATUS, READINESS_STATES,
-  createApplicationViewStateV8, createWorkspaceConsumerReadinessRegistry,
-  createWorkspaceConsumerRegistryV8, refreshApplicationViewStateV8,
-  transitionApplicationViewStateV8, workspaceConsumerDescriptor,
+  APPLICATION_NAVIGATION_ORDER_V9, CONSUMER_IDS, IMPLEMENTATION_STATUS, READINESS_STATES,
+  createApplicationViewStateV9, createWorkspaceConsumerReadinessRegistry,
+  createWorkspaceConsumerRegistryV9, refreshApplicationViewStateV9,
+  transitionApplicationViewStateV9, workspaceConsumerDescriptor,
 } from '../core/workspace-consumers/index.js';
 import { EventBus } from './event-bus.js';
 import { APPLICATION_EVENTS, EVENT_TOPICS } from './event-topics.js';
@@ -10,6 +10,7 @@ import { HomeConsumerController } from './home-consumer-controller.js';
 import { LoadCalcConsumerController } from './load-calc-consumer-controller.js';
 import { PcfConsumerController } from './pcf-consumer-controller.js';
 import { PipeSolverConsumerController } from './pipe-solver-consumer-controller.js';
+import { QaEvidenceController } from './qa-evidence-controller.js';
 import { SketcherController } from './sketcher-controller.js';
 import { ThreeDCalcConsumerController } from './three-d-calc-consumer-controller.js';
 
@@ -19,9 +20,9 @@ export class ApplicationShellController {
     this.consumerController = consumerController;
     this.settingsController = settingsController;
     this.context = consumerController.getContext();
-    this.registry = createWorkspaceConsumerRegistryV8();
+    this.registry = createWorkspaceConsumerRegistryV9();
     this.readiness = this.buildReadiness();
-    this.state = createApplicationViewStateV8(this.readiness, { activeViewId: CONSUMER_IDS.HOME, version: 0 });
+    this.state = createApplicationViewStateV9(this.readiness, { activeViewId: CONSUMER_IDS.HOME, version: 0 });
     this.view = new ApplicationShellView(rootElement, eventBus);
     this.homeController = new HomeConsumerController(
       rootElement?.querySelector('[data-role="home-consumer-root"]'),
@@ -30,6 +31,11 @@ export class ApplicationShellController {
     this.pcfController = new PcfConsumerController(rootElement?.querySelector('[data-role="pcf-consumer-root"]'), eventBus);
     this.sketcherController = new SketcherController(
       rootElement?.querySelector('[data-role="sketcher-consumer-root"]'), () => this.context, eventBus,
+    );
+    this.qaController = new QaEvidenceController(
+      ensureQaRoot(rootElement),
+      () => ({ workspaceConsumerRegistry:this.registry, workspaceConsumerContext:this.context, workspaceConsumerReadinessRows:this.readiness }),
+      eventBus,
     );
     this.loadCalcController = new LoadCalcConsumerController(
       rootElement?.querySelector('[data-role="load-calc-consumer-root"]'), consumerController, eventBus,
@@ -49,6 +55,7 @@ export class ApplicationShellController {
     this.homeController.init();
     this.pcfController.init();
     this.sketcherController.init();
+    this.qaController.init();
     this.loadCalcController.init();
     this.threeDCalcController.init();
     this.pipeSolverController?.init();
@@ -68,25 +75,25 @@ export class ApplicationShellController {
     this.context = context;
     if (readinessChanged) this.readiness = this.buildReadiness();
     if (datasetBoundary && previous !== CONSUMER_IDS.WORKSPACE) {
-      this.state = createApplicationViewStateV8(this.readiness, {
+      this.state = createApplicationViewStateV9(this.readiness, {
         activeViewId: CONSUMER_IDS.WORKSPACE, version: this.state.version + 1,
       });
-    } else if (readinessChanged) this.state = refreshApplicationViewStateV8(this.state, this.readiness);
+    } else if (readinessChanged) this.state = refreshApplicationViewStateV9(this.state, this.readiness);
     if (datasetBoundary || readinessChanged) this.view.render(this.state, this.readiness);
     this.sketcherController.refreshContext();
-    if (this.state.activeViewId === CONSUMER_IDS.HOME) this.homeController.refresh();
-    else this.homeController.close();
+    this.qaController.refreshContext();
+    this.syncDeferredViews();
     if (previous !== this.state.activeViewId) this.publishChanged(previous, datasetBoundary ? 'dataset-replaced' : 'readiness-lost');
   }
 
   handleDatasetReplacement() {
     if (this.state.activeViewId === CONSUMER_IDS.WORKSPACE) return;
     const previous = this.state.activeViewId;
-    this.state = createApplicationViewStateV8(this.readiness, {
+    this.state = createApplicationViewStateV9(this.readiness, {
       activeViewId: CONSUMER_IDS.WORKSPACE, version: this.state.version + 1,
     });
     this.view.render(this.state, this.readiness);
-    this.homeController.close();
+    this.syncDeferredViews();
     this.publishChanged(previous, 'dataset-replaced');
   }
 
@@ -96,14 +103,20 @@ export class ApplicationShellController {
       const descriptor = workspaceConsumerDescriptor(this.registry, viewId);
       const readiness = this.getReadiness(viewId);
       assertImplementedAvailable(descriptor, readiness);
-      const result = transitionApplicationViewStateV8(this.state, viewId, this.readiness);
+      const result = transitionApplicationViewStateV9(this.state, viewId, this.readiness);
       if (!result.activated) throw viewError('VIEW_NOT_AVAILABLE', `${descriptor.label} is unavailable.`);
       this.state = result.state;
       this.view.render(this.state, this.readiness);
-      if (this.state.activeViewId === CONSUMER_IDS.HOME) this.homeController.open();
-      else this.homeController.close();
+      this.syncDeferredViews();
       this.publishChanged(previous, source);
     } catch (error) { this.publishFailed(viewId, error); }
+  }
+
+  syncDeferredViews() {
+    if (this.state.activeViewId === CONSUMER_IDS.HOME) this.homeController.open();
+    else this.homeController.close();
+    if (this.state.activeViewId === CONSUMER_IDS.QA) this.qaController.open();
+    else this.qaController.close();
   }
 
   activate(viewId) {
@@ -142,6 +155,9 @@ export class ApplicationShellController {
   getSketcherDraftAudit() { return this.sketcherController.getAudit(); }
   getSketcherReviewModel() { return this.sketcherController.getReviewModel(); }
   getSketcherWorkspaceAdoption() { return this.sketcherController.getAdoption(); }
+  getQaEvidenceSource() { return this.qaController.getSource(); }
+  getQaReviewModel() { return this.qaController.getReviewModel(); }
+  getQaMaterializationCount() { return this.qaController.getMaterializationCount(); }
   getLoadCalculationReviewModel() { return this.loadCalcController.getReviewModel(); }
   getThreeDCalculationReviewModel() { return this.threeDCalcController.getReviewModel(); }
   getPipeSolverReviewModel() { return this.pipeSolverController?.getReviewModel() || null; }
@@ -152,6 +168,7 @@ export class ApplicationShellController {
     this.pipeSolverController?.destroy();
     this.threeDCalcController.destroy();
     this.loadCalcController.destroy();
+    this.qaController.destroy();
     this.sketcherController.destroy();
     this.pcfController.destroy();
     this.homeController.destroy();
@@ -169,7 +186,7 @@ export class ApplicationShellView {
     this.eventBus = eventBus;
     this.navElement = rootElement?.querySelector('[data-role="application-navigation"]') || null;
     this.statusElement = rootElement?.querySelector('[data-role="application-navigation-status"]') || null;
-    this.views = new Map(APPLICATION_NAVIGATION_ORDER_V8.map((id) => [
+    this.views = new Map(APPLICATION_NAVIGATION_ORDER_V9.map((id) => [
       id, rootElement?.querySelector(`[data-application-view="${id}"]`) || null,
     ]));
     this.keydownHandler = (event) => this.handleKeydown(event);
@@ -177,7 +194,7 @@ export class ApplicationShellView {
   init(registry) {
     if (!this.navElement) return;
     const byId = new Map(registry.consumers.map((row) => [row.consumerId, row]));
-    this.navElement.replaceChildren(...APPLICATION_NAVIGATION_ORDER_V8.map((id) => this.navigationItem(byId.get(id))));
+    this.navElement.replaceChildren(...APPLICATION_NAVIGATION_ORDER_V9.map((id) => this.navigationItem(byId.get(id))));
     this.navElement.addEventListener('keydown', this.keydownHandler);
   }
   render(state, readiness) {
@@ -244,3 +261,12 @@ function assertImplementedAvailable(descriptor, readiness) {
 function viewError(code, message) { const error = new TypeError(message); error.code = code; return error; }
 function keyboardTarget(key, current, length) { if (key === 'Home') return 0; if (key === 'End') return length - 1; if (key === 'ArrowLeft') return current <= 0 ? length - 1 : current - 1; return current < 0 || current === length - 1 ? 0 : current + 1; }
 function setViewVisibility(element, visible) { if (!element) return; element.hidden = !visible; element.setAttribute('aria-hidden', String(!visible)); }
+
+function ensureQaRoot(rootElement) {
+  const view = rootElement?.querySelector('[data-application-view="QA"]');
+  if (!view) return null;
+  const root = rootElement.ownerDocument.createElement('div');
+  root.dataset.role = 'qa-consumer-root';
+  view.replaceChildren(root);
+  return root;
+}
