@@ -1,6 +1,6 @@
 import {
   ENGINEERING_LEVEL, FORMULA_IDS, MANDATORY_LIMITATIONS, QUALIFICATION_STATES,
-  RESULT_SCHEMA, SOURCE_SCHEMA, WORKFLOW_VERSION,
+  RESULT_SCHEMA, WORKFLOW_VERSION,
 } from './constants.js';
 import {
   createCanonicalTrunnionFootprintModel,
@@ -10,7 +10,7 @@ import {
 import { assessmentRegionEvidence } from './assessment.js';
 import { transferAndDistribute } from './distribution.js';
 import { TrunnionFootprintError } from './errors.js';
-import { deepFreeze, semanticHash } from './json.js';
+import { deepFreeze } from './json.js';
 import { attachTrunnionFootprintResultHashes, reconstructTrunnionFootprintResultHashes } from './result-hashes.js';
 import { adoptAndSolveShell } from './shell-adoption.js';
 import { attachmentLoadCase, rejectPressureOnlyRequest, validateAttachmentEvidence } from './source-evidence.js';
