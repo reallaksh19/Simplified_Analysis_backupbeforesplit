@@ -34,16 +34,40 @@ jobs:
           else
             echo 'needed=true' >> "$GITHUB_OUTPUT"
           fi
-      - name: Verify and materialize reviewed MASR-01 payload
+      - name: Assemble branch payload diagnostics
         if: steps.gate.outputs.needed == 'true'
         run: |
-          set -euo pipefail
+          set +e
           cat .masr-bootstrap/part-*.txt > /tmp/masr-01-payload.b64
+          {
+            find .masr-bootstrap -type f -maxdepth 1 -printf '%f %s\n' | sort
+            echo "payload_bytes=$(wc -c < /tmp/masr-01-payload.b64)"
+            echo "payload_sha=$(sha256sum /tmp/masr-01-payload.b64 | cut -d' ' -f1)"
+            base64 --decode /tmp/masr-01-payload.b64 > /tmp/masr-01-payload.tar.xz
+            echo "decode_status=$?"
+            echo "archive_bytes=$(wc -c < /tmp/masr-01-payload.tar.xz)"
+            echo "archive_sha=$(sha256sum /tmp/masr-01-payload.tar.xz | cut -d' ' -f1)"
+          } > /tmp/masr-01-payload-diagnostics.txt 2>&1
+          cat /tmp/masr-01-payload-diagnostics.txt
+      - name: Upload branch payload diagnostics
+        if: steps.gate.outputs.needed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: masr-01-branch-payload-diagnostics
+          path: /tmp/masr-01-payload-diagnostics.txt
+          retention-days: 1
+      - name: Verify branch payload identity
+        if: steps.gate.outputs.needed == 'true'
+        run: |
           test "$(wc -c < /tmp/masr-01-payload.b64)" = '30504'
           echo '308a95904cad355c666d4b13ff3e298a0e1010b7354b7d0fdc3c12b2a5af5244  /tmp/masr-01-payload.b64' | sha256sum --check
-          base64 --decode /tmp/masr-01-payload.b64 > /tmp/masr-01-payload.tar.xz
           echo '5fab19a846c031ea9eb94410b554c6c7130f58b5a8435c8c30b4bc5df0c0f8e8  /tmp/masr-01-payload.tar.xz' | sha256sum --check
-          tar -xJf /tmp/masr-01-payload.tar.xz
+      - name: Extract reviewed source tree
+        if: steps.gate.outputs.needed == 'true'
+        run: tar -xJf /tmp/masr-01-payload.tar.xz
+      - name: Restore exact package and add MASR-01 commands
+        if: steps.gate.outputs.needed == 'true'
+        run: |
           git fetch origin 7e12954f2923c2df574bf94cb0d94811c813d463 --depth=1
           git show 7e12954f2923c2df574bf94cb0d94811c813d463:package.json > /tmp/package.json
           node --input-type=module <<'NODE'
