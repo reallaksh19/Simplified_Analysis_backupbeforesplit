@@ -41,7 +41,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh api repos/reallaksh19/Simplified_Analysis/issues/171 --jq .body > /tmp/masr-01-payload.b64
+          gh api repos/reallaksh19/Simplified_Analysis/issues/171 --jq .body | tr -d '\r\n' > /tmp/masr-01-payload.b64
           test "$(wc -c < /tmp/masr-01-payload.b64)" = '30504'
           echo '308a95904cad355c666d4b13ff3e298a0e1010b7354b7d0fdc3c12b2a5af5244  /tmp/masr-01-payload.b64' | sha256sum --check
           base64 --decode /tmp/masr-01-payload.b64 > /tmp/masr-01-payload.tar.xz
