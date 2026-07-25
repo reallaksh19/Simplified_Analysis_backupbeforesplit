@@ -1,0 +1,24 @@
+export const QA_EVIDENCE_SOURCE_SCHEMA = 'qa-evidence-source/v1';
+export const QA_REVIEW_MODEL_SCHEMA = 'qa-review-model/v1';
+export const QA_EVIDENCE_EXPORT_SCHEMA = 'qa-evidence-export/v1';
+
+export const QA_QUALITY_STATES = Object.freeze({
+  VALID_EMPTY: 'VALID_EMPTY',
+  VALID_PARTIAL: 'VALID_PARTIAL',
+  VALID_READY: 'VALID_READY',
+  INVALID: 'INVALID',
+});
+
+export const QA_AVAILABILITY_STATES = Object.freeze(['AVAILABLE', 'INVALID', 'UNAVAILABLE']);
+export const QA_VALIDATOR_STATES = Object.freeze(['VALID', 'INVALID', 'NOT_PRESENT']);
+export const QA_DATASET_STATES = Object.freeze(['MATCHED', 'NOT_APPLICABLE', 'REJECTED']);
+export const QA_LINK_STATES = Object.freeze(['CURRENT', 'NOT_APPLICABLE', 'STALE', 'REJECTED']);
+export const QA_EXPORT_FORMATS = Object.freeze(['JSON', 'CSV']);
+export const QA_LIMITATIONS = Object.freeze([
+  'NOT_CODE_COMPLIANCE',
+  'NOT_ENGINEERING_APPROVAL',
+  'NOT_REPOSITORY_CI_CERTIFICATION',
+  'NO_BENCHMARK_OR_SOLVER_EXECUTION',
+  'NO_EVIDENCE_REPAIR_OR_REBUILD',
+  'READ_ONLY_RUNTIME_EVIDENCE_ASSESSMENT_ONLY',
+]);
