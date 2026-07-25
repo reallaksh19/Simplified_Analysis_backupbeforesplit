@@ -1,6 +1,7 @@
 import { canonicalStringify, deepFreeze, semanticHash } from '../shared-piping-model/index.js';
 import { LFEA_CONSUMER_VIEW_MODEL_SCHEMA, LFEA_CONSUMER_STATUSES } from './constants.js';
 import { createTablePage } from './pagination.js';
+import { compareLfeaIdentity, lfeaSelectionIdentity } from './selection.js';
 import { LFEA_TABLE_IDS } from './session.js';
 
 const VIEW_MODEL_KEYS = Object.freeze([
@@ -94,15 +95,15 @@ export function resolveLfeaSelection(viewModel, selection) {
 
 function allRows(model) {
   const rows = [];
-  for (const row of model.geometry.nodes || []) rows.push(selected('NODE', row.nodeId, row));
-  for (const row of model.geometry.elements || []) rows.push(selected('ELEMENT', row.elementId, row));
-  for (const row of [...(model.loads.nodalForces || []), ...(model.loads.edgeTractions || []), ...(model.loads.edgePressures || [])]) rows.push(selected('LOAD', row.loadId, row));
-  for (const row of model.constraints.rows || []) rows.push(selected('CONSTRAINT', row.constraintId, row));
-  for (const row of model.reactions.rows || []) rows.push(selected('REACTION', row.reactionId || `${row.nodeId}:${row.component}`, row));
-  for (const row of model.rawStress.rows || []) rows.push(selected('RAW_STRESS_LOCATION', `${row.elementId}:${row.resultLocationId}`, row));
-  for (const row of [...(model.projectedStress.elementCornerValues || []), ...(model.projectedStress.nodalValues || [])]) rows.push(selected('PROJECTED_STRESS_LOCATION', projectionIdentity(row), row));
-  for (const row of [...(model.convergence.levels || []), ...(model.convergence.quantities || [])]) rows.push(selected('CONVERGENCE_QUANTITY', row.quantityId || row.levelId, row));
-  for (const row of model.suppliedFiles || []) rows.push(selected('SUPPLIED_FILE', row.path, row));
+  for (const row of model.geometry.nodes || []) rows.push(selected('NODE', row));
+  for (const row of model.geometry.elements || []) rows.push(selected('ELEMENT', row));
+  for (const row of [...(model.loads.nodalForces || []), ...(model.loads.edgeTractions || []), ...(model.loads.edgePressures || [])]) rows.push(selected('LOAD', row));
+  for (const row of model.constraints.rows || []) rows.push(selected('CONSTRAINT', row));
+  for (const row of model.reactions.rows || []) rows.push(selected('REACTION', row));
+  for (const row of model.rawStress.rows || []) rows.push(selected('RAW_STRESS_LOCATION', row));
+  for (const row of [...(model.projectedStress.elementCornerValues || []), ...(model.projectedStress.nodalValues || [])]) rows.push(selected('PROJECTED_STRESS_LOCATION', row));
+  for (const row of [...(model.convergence.levels || []), ...(model.convergence.quantities || [])]) rows.push(selected('CONVERGENCE_QUANTITY', row));
+  for (const row of model.suppliedFiles || []) rows.push(selected('SUPPLIED_FILE', row));
   return rows;
 }
 
@@ -119,7 +120,7 @@ function rowsFor(review, files) {
     diagnostics: sortDiagnostics(review.diagnostics),
     projectedStress: [...review.projectedStressReview.elementCornerValues, ...review.projectedStressReview.nodalValues],
     convergence: [...review.convergenceReview.levels, ...review.convergenceReview.quantities],
-    suppliedFiles: [...files].sort((a, b) => a.path.localeCompare(b.path)).map(fileSummary),
+    suppliedFiles: [...files].sort((a, b) => compareLfeaIdentity(a.path, b.path)).map(fileSummary),
   };
 }
 
@@ -135,9 +136,8 @@ function fileSummary(file) {
     rowCount: file.rowCount ?? null,
   });
 }
-function sortDiagnostics(rows) { const order=new Map([['ERROR',0],['WARNING',1],['INFORMATION',2]]);return [...rows].sort((a,b)=>(order.get(a.severity)??99)-(order.get(b.severity)??99)||canonicalStringify(a).localeCompare(canonicalStringify(b))); }
-function projectionIdentity(row) { return row.nodeId || `${row.elementId}:${row.cornerId}`; }
-function selected(type, identity, value) { return { type, identity, value }; }
+function sortDiagnostics(rows) { const order=new Map([['ERROR',0],['WARNING',1],['INFORMATION',2]]);return [...rows].sort((a,b)=>(order.get(a.severity)??99)-(order.get(b.severity)??99)||compareLfeaIdentity(canonicalStringify(a),canonicalStringify(b))); }
+function selected(type, value) { return { type, identity:lfeaSelectionIdentity(type, value), value }; }
 function withoutHash(value) { const { semanticHash: _hash, ...base } = value || {}; return base; }
 function assertRecord(value,name){if(!value||typeof value!=='object'||Array.isArray(value))throw new TypeError(`${name} must be a record.`);}
 function exactKeys(value,keys,name){const actual=Object.keys(value).sort(),expected=[...keys].sort();if(JSON.stringify(actual)!==JSON.stringify(expected))throw new TypeError(`${name} keys are not closed.`);}
