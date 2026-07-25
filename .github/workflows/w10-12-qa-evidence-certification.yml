@@ -27,7 +27,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: 0
+          fetch-depth: 2
+          show-progress: false
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -36,13 +37,21 @@ jobs:
       - name: Install Chromium
         run: npx playwright install chromium --with-deps
       - name: Certify W10.12 contracts
-        run: npm run check:w10.12:contracts
+        run: |
+          set -o pipefail
+          npm run check:w10.12:contracts 2>&1 | tee w10-12-contracts.log
       - name: Certify W10.12 properties
-        run: npm run check:w10.12:properties
+        run: |
+          set -o pipefail
+          npm run check:w10.12:properties 2>&1 | tee w10-12-properties.log
       - name: Certify W10.12 source boundaries
-        run: npm run check:w10.12:source
+        run: |
+          set -o pipefail
+          npm run check:w10.12:source 2>&1 | tee w10-12-source.log
       - name: Certify W10.12 browser behavior
-        run: npm run check:w10.12:browser
+        run: |
+          set -o pipefail
+          npm run check:w10.12:browser 2>&1 | tee w10-12-browser.log
       - name: Run full repository checks
         run: npm run check:full
       - name: Build production application
@@ -53,6 +62,7 @@ jobs:
         with:
           name: w10-12-qa-evidence-certification
           path: |
+            w10-12-*.log
             playwright-report/
             test-results/
           if-no-files-found: ignore
