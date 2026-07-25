@@ -1,0 +1,65 @@
+name: MASR-01 Shell, Icon and Navigation Certification
+
+on:
+  pull_request:
+    paths:
+      - 'src/core/application-tabs/**'
+      - 'src/core/workspace-consumers/constants.js'
+      - 'src/core/workspace-consumers/view-state.js'
+      - 'src/core/workspace-consumers/index.js'
+      - 'src/core/workspace-consumers/event-contracts.js'
+      - 'src/workspace/application-shell-controller.js'
+      - 'src/workspace/workspace-layout.js'
+      - 'scripts/masr-01-*.mjs'
+      - 'e2e/masr-01-*.spec.js'
+      - 'docs/main-tab-recovery/MASR-01_SHELL_ICON_NAVIGATION.md'
+      - 'vite.config.js'
+      - 'package.json'
+      - '.github/workflows/masr-01-shell-navigation-certification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact MASR-01 head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright install chromium --with-deps
+      - name: Certify MASR-01 contracts
+        run: npm run check:masr.01:contracts
+      - name: Certify MASR-01 properties
+        run: npm run check:masr.01:properties
+      - name: Certify MASR-01 source boundaries
+        run: npm run check:masr.01:source
+      - name: Certify MASR-01 browser and visual acceptance
+        run: npm run check:masr.01:browser
+      - name: Run advisory full repository checks
+        continue-on-error: true
+        run: npm run check:full
+      - name: Build production application with exact SHA
+        env:
+          VITE_BUILD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npm run build
+      - name: Upload MASR-01 visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: masr-01-shell-navigation-evidence
+          path: |
+            playwright-report/
+            test-results/masr-01/
+          if-no-files-found: ignore
+          retention-days: 14

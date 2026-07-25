@@ -144,7 +144,12 @@
     "check:w10.12:properties": "node scripts/w10.12-qa-evidence-property-check.mjs",
     "check:w10.12:source": "node scripts/w10.12-qa-evidence-source-guard.mjs && node scripts/w10.12-registration-check.mjs",
     "check:w10.12:browser": "playwright test e2e/w10.12-qa-evidence-consumer.spec.js",
-    "check:w10.12": "npm run check:w10.12:contracts && npm run check:w10.12:properties && npm run check:w10.12:source && npm run check:w10.12:browser"
+    "check:w10.12": "npm run check:w10.12:contracts && npm run check:w10.12:properties && npm run check:w10.12:source && npm run check:w10.12:browser",
+    "check:masr.01:contracts": "node scripts/masr-01-shell-contract-check.mjs",
+    "check:masr.01:properties": "node scripts/masr-01-shell-property-check.mjs",
+    "check:masr.01:source": "node scripts/masr-01-shell-source-guard.mjs && node scripts/masr-01-registration-check.mjs",
+    "check:masr.01:browser": "playwright test e2e/masr-01-shell-navigation.spec.js",
+    "check:masr.01": "npm run check:masr.01:contracts && npm run check:masr.01:properties && npm run check:masr.01:source && npm run check:masr.01:browser"
   },
   "dependencies": {
     "@react-spring/three": "^10.0.3",
