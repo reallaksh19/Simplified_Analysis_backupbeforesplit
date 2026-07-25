@@ -22,7 +22,7 @@ for(const file of files){
   assert.equal(new Set(exports).size,exports.length,`${file} duplicate named exports`);
 }
 if(fs.existsSync(path.join(root,'.git'))){
-  const baseline='c49749f447880261eb2126b3dd6046faa67ce88f';
+  const baseline='7e12954f2923c2df574bf94cb0d94811c813d463';
   let baselineAvailable=true;
   try{execFileSync('git',['cat-file','-e',`${baseline}^{commit}`],{stdio:'ignore'});}catch{baselineAvailable=false;}
   if(baselineAvailable){
