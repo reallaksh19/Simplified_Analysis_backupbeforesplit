@@ -54,14 +54,24 @@ jobs:
           echo "08f0e44ada2b4db6b43838eef37431ab6ffb28c2cc706119f45239a353a43d02  /tmp/lfea007-impl.tar.gz" | sha256sum --check --strict
           tar -xzf /tmp/lfea007-impl.tar.gz -C .
           rm scripts/lfea-007-bootstrap-part-{00..04}.txt
-      - name: Publish exact implementation head
+      - name: Validate implementation diff
+        if: steps.staged.outputs.present == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+      - name: Commit implementation
         if: steps.staged.outputs.present == 'true'
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --check
           git commit -m "feat(lfea-007): implement read-only Local FEA application consumer"
+      - name: Push implementation head
+        if: steps.staged.outputs.present == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
           git push origin HEAD:agent/lfea-007-application-consumer
