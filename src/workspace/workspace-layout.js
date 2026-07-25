@@ -1,9 +1,11 @@
+import { lfeaConsumerStyles } from './lfea-consumer-styles.js';
+
 export function renderWorkspaceLayout(rootElement) {
   rootElement.replaceChildren();
   const shell = rootElement.ownerDocument.createElement('div');
   shell.innerHTML = workspaceMarkup();
   const style = rootElement.ownerDocument.createElement('style');
-  style.textContent = shellStyles();
+  style.textContent = `${shellStyles()}${lfeaConsumerStyles()}`;
   rootElement.append(style, shell.firstElementChild);
 }
 
@@ -35,6 +37,7 @@ function workspaceMarkup() {
     <div class="application-view application-view--sketcher" data-application-view="SKETCHER" hidden aria-hidden="true"><div data-role="sketcher-consumer-root"></div></div>
     <div class="application-view application-view--three-d-calc" data-application-view="THREE_D_CALC" hidden aria-hidden="true"><div data-role="three-d-calc-consumer-root"></div></div>
     <div class="application-view application-view--pipe-solver" data-application-view="PIPE_SOLVER" hidden aria-hidden="true"><div data-role="pipe-solver-consumer-root"></div></div>
+    <div class="application-view application-view--local-fea" data-application-view="LOCAL_FEA" hidden aria-hidden="true"><div data-role="lfea-consumer-root"></div></div>
     <div class="application-view application-view--reports" data-application-view="REPORTS" hidden aria-hidden="true"><div data-role="reports-consumer-root"></div></div>
     <div class="application-view application-view--qa" data-application-view="QA" hidden aria-hidden="true">${unavailableView('QA','QA is not implemented in the current runtime.')}</div>
     <div class="application-view application-view--settings" data-application-view="SETTINGS" hidden aria-hidden="true"><div data-role="settings-consumer-root"></div></div>

@@ -1,3 +1,4 @@
+import { createInitialLfeaConsumerProfile } from '../core/lfea-consumer/index.js';
 import { createDefaultAnalysisCapabilityRegistry } from './analysis-capabilities.js';
 import { AnalysisCoordinator } from './analysis-coordinator.js';
 import { AnalysisLedgerController } from './analysis-ledger-controller.js';
@@ -6,6 +7,7 @@ import { AnalysisSessionController } from './analysis-session-controller.js';
 import { AnalysisSessions } from './analysis-session-store.js';
 import { ApplicationShellController } from './application-shell-controller.js';
 import { DatasetController } from './dataset-controller.js';
+import { LfeaConsumerController } from './lfea-consumer-controller.js';
 import { EventBus } from './event-bus.js';
 import { ModelCalculationController } from './model-calculation-controller.js';
 import { ModelCalculationPanel } from './model-calculation-panel.js';
@@ -43,204 +45,64 @@ import { WorkspaceState } from './workspace-state.js';
 
 export function bootstrapAnalysisWorkspace(rootElement) {
   if (!rootElement) throw new Error('Application root #root was not found.');
-
   WorkspaceState.clearDataset(); AnalysisSessions.clear(); AnalysisLedger.clear();
   TopologyStore.clear(); SupportRestraintStore.clear(); ModelLoadStore.clear();
   SupportLoadScreeningStore.clear(); VerticalBeamStore.clear(); ModelCalculationStore.clear();
   renderWorkspaceLayout(rootElement);
-
   const capabilityRegistry = createDefaultAnalysisCapabilityRegistry();
   const workspaceConsumerController = new WorkspaceConsumerController(EventBus);
   const settingsPersistence = new SettingsPersistenceAdapter(rootElement.ownerDocument.defaultView?.localStorage);
-  const settingsController = new SettingsController(
-    rootElement.querySelector('[data-role="settings-consumer-root"]'),
-    EventBus,
-    settingsPersistence,
-    () => ({ materializedContractKeys: workspaceConsumerController.getContext()?.availabilitySummary?.availableContractKeys || [] }),
-  );
+  const settingsController = new SettingsController(rootElement.querySelector('[data-role="settings-consumer-root"]'),EventBus,settingsPersistence,() => ({ materializedContractKeys: workspaceConsumerController.getContext()?.availabilitySummary?.availableContractKeys || [] }));
   settingsController.init();
-
   const datasetController = new DatasetController(EventBus, WorkspaceState);
   const sharedModelController = new SharedModelController(EventBus, WorkspaceState, rootElement.ownerDocument);
   const topologyController = new TopologyController(EventBus, TopologyStore, rootElement.ownerDocument);
-  const supportRestraintController = new SupportRestraintController(
-    EventBus, SupportRestraintStore, TopologyStore, rootElement.ownerDocument,
-  );
+  const supportRestraintController = new SupportRestraintController(EventBus, SupportRestraintStore, TopologyStore, rootElement.ownerDocument);
   const modelLoadController = new ModelLoadController(EventBus, ModelLoadStore, rootElement.ownerDocument);
-  const supportLoadScreeningController = new SupportLoadScreeningController(
-    EventBus, SupportLoadScreeningStore, rootElement.ownerDocument,
-  );
-  const verticalBeamController = new VerticalBeamController(
-    EventBus, VerticalBeamStore, rootElement.ownerDocument,
-  );
-  const modelCalculationController = new ModelCalculationController(
-    EventBus,
-    ModelCalculationStore,
-    rootElement.ownerDocument,
-    () => settingsController.getProfile(),
-  );
+  const supportLoadScreeningController = new SupportLoadScreeningController(EventBus, SupportLoadScreeningStore, rootElement.ownerDocument);
+  const verticalBeamController = new VerticalBeamController(EventBus, VerticalBeamStore, rootElement.ownerDocument);
+  const modelCalculationController = new ModelCalculationController(EventBus,ModelCalculationStore,rootElement.ownerDocument,() => settingsController.getProfile());
   const modelSupportLoadController = new ModelSupportLoadController(EventBus, WorkspaceState);
-  const sessionController = new AnalysisSessionController(
-    EventBus, WorkspaceState, capabilityRegistry, AnalysisSessions,
-  );
-  const analysisCoordinator = new AnalysisCoordinator(
-    EventBus, WorkspaceState, capabilityRegistry, AnalysisSessions,
-  );
-  const ledgerController = new AnalysisLedgerController(
-    EventBus, AnalysisLedger, rootElement.ownerDocument,
-  );
+  const sessionController = new AnalysisSessionController(EventBus, WorkspaceState, capabilityRegistry, AnalysisSessions);
+  const analysisCoordinator = new AnalysisCoordinator(EventBus, WorkspaceState, capabilityRegistry, AnalysisSessions);
+  const ledgerController = new AnalysisLedgerController(EventBus, AnalysisLedger, rootElement.ownerDocument);
   const treePanel = new TreePanel(rootElement.querySelector('[data-panel="tree"]'), EventBus);
   const viewportPanel = new ViewportPanel(rootElement.querySelector('[data-panel="viewport"]'), EventBus);
-  const sharedModelPanel = new SharedModelPanel(
-    rootElement.querySelector('[data-role="shared-model-summary"]'), EventBus,
-  );
-  const topologyPanel = new TopologyPanel(
-    rootElement.querySelector('[data-role="topology-summary"]'), EventBus,
-  );
-  const supportRestraintPanel = new SupportRestraintPanel(
-    rootElement.querySelector('[data-role="support-restraint-summary"]'), EventBus,
-  );
-  const modelLoadPanel = new ModelLoadPanel(
-    rootElement.querySelector('[data-role="model-load-summary"]'), EventBus,
-  );
-  const supportLoadScreeningPanel = new SupportLoadScreeningPanel(
-    rootElement.querySelector('[data-role="support-load-screening-summary"]'), EventBus,
-  );
-  const verticalBeamPanel = new VerticalBeamPanel(
-    rootElement.querySelector('[data-role="vertical-beam-summary"]'), EventBus,
-  );
-  const modelCalculationPanel = new ModelCalculationPanel(
-    rootElement.querySelector('[data-role="model-calculation-summary"]'), EventBus,
-  );
-  const modelSupportLoadPanel = new ModelSupportLoadPanel(
-    rootElement.querySelector('[data-role="model-support-load-summary"]'), EventBus,
-  );
-  const propertiesPanel = new PropertiesPanel(
-    rootElement.querySelector('[data-panel="properties"]'), EventBus, WorkspaceState,
-  );
-  const pipeSolverAdapter = new PipeSolverConsumerAdapter({
-    workspaceState: WorkspaceState,
-    capabilityRegistry,
-    sessionStore: AnalysisSessions,
-    ledgerStore: AnalysisLedger,
-  });
-  const applicationShellController = new ApplicationShellController(
-    rootElement, workspaceConsumerController, EventBus, pipeSolverAdapter, settingsController,
-  );
-  const reportsConsumerController = new ReportsConsumerController(
-    rootElement.querySelector('[data-role="reports-consumer-root"]'),
-    workspaceConsumerController,
-    EventBus,
-  );
-  const controllers = [
-    datasetController,
-    sharedModelController,
-    topologyController,
-    supportRestraintController,
-    modelLoadController,
-    supportLoadScreeningController,
-    verticalBeamController,
-    modelCalculationController,
-    modelSupportLoadController,
-    sessionController,
-    analysisCoordinator,
-    ledgerController,
-    treePanel,
-    viewportPanel,
-    sharedModelPanel,
-    topologyPanel,
-    supportRestraintPanel,
-    modelLoadPanel,
-    supportLoadScreeningPanel,
-    verticalBeamPanel,
-    modelCalculationPanel,
-    modelSupportLoadPanel,
-    propertiesPanel,
-    workspaceConsumerController,
-    settingsController,
-    applicationShellController,
-    reportsConsumerController,
-  ];
+  const sharedModelPanel = new SharedModelPanel(rootElement.querySelector('[data-role="shared-model-summary"]'), EventBus);
+  const topologyPanel = new TopologyPanel(rootElement.querySelector('[data-role="topology-summary"]'), EventBus);
+  const supportRestraintPanel = new SupportRestraintPanel(rootElement.querySelector('[data-role="support-restraint-summary"]'), EventBus);
+  const modelLoadPanel = new ModelLoadPanel(rootElement.querySelector('[data-role="model-load-summary"]'), EventBus);
+  const supportLoadScreeningPanel = new SupportLoadScreeningPanel(rootElement.querySelector('[data-role="support-load-screening-summary"]'), EventBus);
+  const verticalBeamPanel = new VerticalBeamPanel(rootElement.querySelector('[data-role="vertical-beam-summary"]'), EventBus);
+  const modelCalculationPanel = new ModelCalculationPanel(rootElement.querySelector('[data-role="model-calculation-summary"]'), EventBus);
+  const modelSupportLoadPanel = new ModelSupportLoadPanel(rootElement.querySelector('[data-role="model-support-load-summary"]'), EventBus);
+  const propertiesPanel = new PropertiesPanel(rootElement.querySelector('[data-panel="properties"]'), EventBus, WorkspaceState);
+  const pipeSolverAdapter = new PipeSolverConsumerAdapter({ workspaceState:WorkspaceState,capabilityRegistry,sessionStore:AnalysisSessions,ledgerStore:AnalysisLedger });
+  const lfeaConsumerProfile = createInitialLfeaConsumerProfile();
+  const lfeaConsumerController = new LfeaConsumerController(rootElement.querySelector('[data-role="lfea-consumer-root"]'),EventBus,lfeaConsumerProfile);
+  const applicationShellController = new ApplicationShellController(rootElement,workspaceConsumerController,EventBus,pipeSolverAdapter,settingsController,lfeaConsumerController);
+  const reportsConsumerController = new ReportsConsumerController(rootElement.querySelector('[data-role="reports-consumer-root"]'),workspaceConsumerController,EventBus);
+  const controllers = [datasetController,sharedModelController,topologyController,supportRestraintController,modelLoadController,supportLoadScreeningController,verticalBeamController,modelCalculationController,modelSupportLoadController,sessionController,analysisCoordinator,ledgerController,treePanel,viewportPanel,sharedModelPanel,topologyPanel,supportRestraintPanel,modelLoadPanel,supportLoadScreeningPanel,verticalBeamPanel,modelCalculationPanel,modelSupportLoadPanel,propertiesPanel,workspaceConsumerController,settingsController,applicationShellController,reportsConsumerController];
   controllers.forEach((controller) => controller.init());
-
   globalThis.EventBus = EventBus;
-
   return Object.freeze({
-    getSnapshot() { return WorkspaceState.getSnapshot(); },
-    getSharedModel() {
-      const snapshot = WorkspaceState.getSnapshot();
-      return snapshot.status === 'ready' ? snapshot.dataset?.sharedModel || null : null;
-    },
-    getTopologyGraph() { return TopologyStore.getGraph(); },
-    getTopologyAudit() { return TopologyStore.getAudit(); },
-    getSupportAttachmentModel() { return SupportRestraintStore.getAttachmentModel(); },
-    getSupportAttachmentAudit() { return SupportRestraintStore.getAttachmentAudit(); },
-    getRestraintCapabilityModel() { return SupportRestraintStore.getRestraintModel(); },
-    getRestraintCapabilityAudit() { return SupportRestraintStore.getRestraintAudit(); },
-    getLoadCaseSet() { return ModelLoadStore.getLoadCaseSet(); },
-    getLoadPrimitiveSet() { return ModelLoadStore.getLoadPrimitiveSet(); },
-    getModelLoadReadinessAudit() { return ModelLoadStore.getReadinessAudit(); },
-    getVerticalLoadPathModel() { return SupportLoadScreeningStore.getPathModel(); },
-    getSupportLoadScreening() { return SupportLoadScreeningStore.getScreening(); },
-    getSupportLoadScreeningAudit() { return SupportLoadScreeningStore.getAudit(); },
-    getFlexuralPropertyProjection() { return VerticalBeamStore.getFlexuralProjection(); },
-    getVerticalBeamModel() { return VerticalBeamStore.getBeamModel(); },
-    getVerticalBeamSolution() { return VerticalBeamStore.getSolution(); },
-    getVerticalBeamSolverAudit() { return VerticalBeamStore.getAudit(); },
-    getModelCalculationLedger() { return ModelCalculationStore.getLedger(); },
-    getActiveModelCalculationPackage() { return ModelCalculationStore.getActivePackage(); },
-    getActiveModelCalculationReport() { return ModelCalculationStore.getActiveReport(); },
-    getEngineeringSettingsProfile() { return settingsController.getProfile(); },
-    getEngineeringSettingsAudit() { return settingsController.getAudit(); },
-    getSettingsReviewModel() { return settingsController.getReviewModel(); },
-    getWorkspaceConsumerContext() { return workspaceConsumerController.getContext(); },
-    listWorkspaceConsumers() { return applicationShellController.getRegistry().consumers; },
-    getWorkspaceConsumerReadiness(consumerId) { return applicationShellController.getReadiness(consumerId); },
-    getApplicationViewState() { return applicationShellController.getPublicState(); },
-    activateApplicationView(viewId) { return applicationShellController.activate(viewId); },
-    getSketcherDraftDocument() { return applicationShellController.getSketcherDraftDocument(); },
-    getSketcherDraftAudit() { return applicationShellController.getSketcherDraftAudit(); },
-    getSketcherReviewModel() { return applicationShellController.getSketcherReviewModel(); },
-    getSketcherWorkspaceAdoption() { return applicationShellController.getSketcherWorkspaceAdoption(); },
-    getQaEvidenceSource() { return applicationShellController.getQaEvidenceSource(); },
-    getQaReviewModel() { return applicationShellController.getQaReviewModel(); },
-    getLoadCalculationReviewModel() { return applicationShellController.getLoadCalculationReviewModel(); },
-    getThreeDCalculationReviewModel() { return applicationShellController.getThreeDCalculationReviewModel(); },
-    getPipeSolverReviewModel() { return applicationShellController.getPipeSolverReviewModel(); },
-    getModelSupportLoadReadiness() {
-      const snapshot = WorkspaceState.getSnapshot();
-      return snapshot.status === 'ready' && snapshot.dataset
-        ? assessModelSupportLoadReadiness(snapshot.dataset)
-        : null;
-    },
-    getAnalysisSession() { return AnalysisSessions.getSnapshot(); },
-    getAnalysisLedger() { return AnalysisLedger.getSnapshot(); },
-    getAnalysisCapabilities(targetId) {
-      try {
-        const entity = WorkspaceState.getEntity(targetId);
-        const snapshot = WorkspaceState.getSnapshot();
-        if (!entity || snapshot.status !== 'ready') return [];
-        return capabilityRegistry.list({
-          targetId: entity.entityId,
-          entity,
-          dataset: snapshot.dataset,
-          selectedEntityId: snapshot.selectedEntityId,
-          version: snapshot.version,
-        });
-      } catch { return []; }
-    },
-    destroy() {
-      [...controllers].reverse().forEach((controller) => controller.destroy());
-      ModelCalculationStore.clear();
-      VerticalBeamStore.clear();
-      SupportLoadScreeningStore.clear();
-      ModelLoadStore.clear();
-      SupportRestraintStore.clear();
-      TopologyStore.clear();
-      AnalysisLedger.clear();
-      AnalysisSessions.clear();
-      WorkspaceState.clearDataset();
-      rootElement.replaceChildren();
-    },
+    getSnapshot(){return WorkspaceState.getSnapshot();},
+    getSharedModel(){const snapshot=WorkspaceState.getSnapshot();return snapshot.status==='ready'?snapshot.dataset?.sharedModel||null:null;},
+    getTopologyGraph(){return TopologyStore.getGraph();},getTopologyAudit(){return TopologyStore.getAudit();},
+    getSupportAttachmentModel(){return SupportRestraintStore.getAttachmentModel();},getSupportAttachmentAudit(){return SupportRestraintStore.getAttachmentAudit();},
+    getRestraintCapabilityModel(){return SupportRestraintStore.getRestraintModel();},getRestraintCapabilityAudit(){return SupportRestraintStore.getRestraintAudit();},
+    getLoadCaseSet(){return ModelLoadStore.getLoadCaseSet();},getLoadPrimitiveSet(){return ModelLoadStore.getLoadPrimitiveSet();},getModelLoadReadinessAudit(){return ModelLoadStore.getReadinessAudit();},
+    getVerticalLoadPathModel(){return SupportLoadScreeningStore.getPathModel();},getSupportLoadScreening(){return SupportLoadScreeningStore.getScreening();},getSupportLoadScreeningAudit(){return SupportLoadScreeningStore.getAudit();},
+    getFlexuralPropertyProjection(){return VerticalBeamStore.getFlexuralProjection();},getVerticalBeamModel(){return VerticalBeamStore.getBeamModel();},getVerticalBeamSolution(){return VerticalBeamStore.getSolution();},getVerticalBeamSolverAudit(){return VerticalBeamStore.getAudit();},
+    getModelCalculationLedger(){return ModelCalculationStore.getLedger();},getActiveModelCalculationPackage(){return ModelCalculationStore.getActivePackage();},getActiveModelCalculationReport(){return ModelCalculationStore.getActiveReport();},
+    getEngineeringSettingsProfile(){return settingsController.getProfile();},getEngineeringSettingsAudit(){return settingsController.getAudit();},getSettingsReviewModel(){return settingsController.getReviewModel();},
+    getWorkspaceConsumerContext(){return workspaceConsumerController.getContext();},listWorkspaceConsumers(){return applicationShellController.getRegistry().consumers;},getWorkspaceConsumerReadiness(consumerId){return applicationShellController.getReadiness(consumerId);},getApplicationViewState(){return applicationShellController.getPublicState();},activateApplicationView(viewId){return applicationShellController.activate(viewId);},
+    getSketcherDraftDocument(){return applicationShellController.getSketcherDraftDocument();},getSketcherDraftAudit(){return applicationShellController.getSketcherDraftAudit();},getSketcherReviewModel(){return applicationShellController.getSketcherReviewModel();},getSketcherWorkspaceAdoption(){return applicationShellController.getSketcherWorkspaceAdoption();},
+    getQaEvidenceSource(){return applicationShellController.getQaEvidenceSource();},getQaReviewModel(){return applicationShellController.getQaReviewModel();},getLoadCalculationReviewModel(){return applicationShellController.getLoadCalculationReviewModel();},getThreeDCalculationReviewModel(){return applicationShellController.getThreeDCalculationReviewModel();},getPipeSolverReviewModel(){return applicationShellController.getPipeSolverReviewModel();},
+    getLfeaConsumerProfile(){return lfeaConsumerProfile;},getLfeaConsumerSession(){return applicationShellController.getLfeaConsumerSession();},getLfeaConsumerViewModel(){return applicationShellController.getLfeaConsumerViewModel();},getLfeaLoadedReview(){return applicationShellController.getLfeaLoadedReview();},getLfeaLoadedExport(){return applicationShellController.getLfeaLoadedExport();},
+    getModelSupportLoadReadiness(){const snapshot=WorkspaceState.getSnapshot();return snapshot.status==='ready'&&snapshot.dataset?assessModelSupportLoadReadiness(snapshot.dataset):null;},
+    getAnalysisSession(){return AnalysisSessions.getSnapshot();},getAnalysisLedger(){return AnalysisLedger.getSnapshot();},
+    getAnalysisCapabilities(targetId){try{const entity=WorkspaceState.getEntity(targetId),snapshot=WorkspaceState.getSnapshot();if(!entity||snapshot.status!=='ready')return[];return capabilityRegistry.list({targetId:entity.entityId,entity,dataset:snapshot.dataset,selectedEntityId:snapshot.selectedEntityId,version:snapshot.version});}catch{return[];}},
+    destroy(){[...controllers].reverse().forEach((controller)=>controller.destroy());ModelCalculationStore.clear();VerticalBeamStore.clear();SupportLoadScreeningStore.clear();ModelLoadStore.clear();SupportRestraintStore.clear();TopologyStore.clear();AnalysisLedger.clear();AnalysisSessions.clear();WorkspaceState.clearDataset();rootElement.replaceChildren();},
   });
 }

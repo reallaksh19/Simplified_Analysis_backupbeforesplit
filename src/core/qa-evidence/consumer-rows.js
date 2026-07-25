@@ -1,10 +1,10 @@
 import { canonicalStringify, deepFreeze } from '../shared-piping-model/index.js';
-import { APPLICATION_NAVIGATION_ORDER_V9, IMPLEMENTATION_STATUS, READINESS_STATES } from '../workspace-consumers/index.js';
+import { APPLICATION_NAVIGATION_ORDER_V9, APPLICATION_NAVIGATION_ORDER_V10, IMPLEMENTATION_STATUS, READINESS_STATES, WORKSPACE_CONSUMER_REGISTRY_V10_SCHEMA } from '../workspace-consumers/index.js';
 
 export function createQaConsumerRows(registry, readinessRows) {
   const descriptors = new Map(registry.consumers.map((row) => [row.consumerId, row]));
   const readiness = new Map(readinessRows.map((row) => [row.consumerId, row]));
-  return deepFreeze(APPLICATION_NAVIGATION_ORDER_V9.map((consumerId) => {
+  return deepFreeze(navigationOrder(registry).map((consumerId) => {
     const descriptor = descriptors.get(consumerId);
     const row = readiness.get(consumerId);
     return {
@@ -33,5 +33,5 @@ export function implementedQaSummary(rows) {
     unavailableCount: implemented.filter((row) => row.readinessState !== READINESS_STATES.AVAILABLE).length,
   });
 }
-
+function navigationOrder(registry) { return registry.schema === WORKSPACE_CONSUMER_REGISTRY_V10_SCHEMA ? APPLICATION_NAVIGATION_ORDER_V10 : APPLICATION_NAVIGATION_ORDER_V9; }
 function copy(value) { return JSON.parse(canonicalStringify(value)); }

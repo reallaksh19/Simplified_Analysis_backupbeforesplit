@@ -28,7 +28,6 @@ const browser = read('e2e/w10.11-pipe-solver-consumer.spec.js');
   if (!browser.includes(token)) errors.push(`W10.11 browser evidence is missing ${token}.`);
 });
 const packageJson = read('package.json');
-const u0Workflow = read('.github/workflows/u0-certification.yml');
 const releaseWorkflow = read('.github/workflows/release-candidate.yml');
 [
   'check:w10.11:static', 'check:w10.11:browser', 'e2e/w10.11-pipe-solver-consumer.spec.js',
@@ -36,9 +35,6 @@ const releaseWorkflow = read('.github/workflows/release-candidate.yml');
 ].forEach((token) => {
   if (!packageJson.includes(token)) errors.push(`package.json W10.11 registration is missing ${token}.`);
 });
-if (!u0Workflow.includes('npm run check:qa -- --skip-e2e') || !u0Workflow.includes('npm run check:workspace-browser')) {
-  errors.push('Phase U0 Certification must retain the QA and consolidated browser registration paths.');
-}
 if (!releaseWorkflow.includes('npm run check:u7') || !releaseWorkflow.includes('npm run check:release')) {
   errors.push('Release Candidate Certification must retain the U7 and release registration paths.');
 }
@@ -49,5 +45,5 @@ if (errors.length) {
   errors.forEach((error) => console.error(`❌ ${error}`));
   process.exit(1);
 }
-console.log('✅ W10.11 release and browser registration evidence passed.');
+console.log('✅ W10.11 release and browser registration evidence passed without the retired Phase U0 gate.');
 function read(file) { return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : ''; }
