@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import {
-  createInitialLfeaConsumerProfile, createQualifiedLfeaConsumerSession, createLfeaConsumerViewModel,
-  inspectLfeaSourceObject, resolveLfeaSelection, updateLfeaConsumerSession,
+  compareLfeaIdentity, createInitialLfeaConsumerProfile, createQualifiedLfeaConsumerSession,
+  createLfeaConsumerViewModel, inspectLfeaSourceObject, lfeaSelectionIdentity,
+  resolveLfeaSelection, updateLfeaConsumerSession,
 } from '../src/core/lfea-consumer/index.js';
-import { q4ConsumerFixture, t3ConsumerFixture } from './lfea-007-fixtures.mjs';
+import { convergenceConsumerFixture, q4ConsumerFixture, t3ConsumerFixture } from './lfea-007-fixtures.mjs';
 
 const profile = createInitialLfeaConsumerProfile();
 for (const fixture of [q4ConsumerFixture({ projection:true }), t3ConsumerFixture()]) {
@@ -26,6 +27,7 @@ for (const fixture of [q4ConsumerFixture({ projection:true }), t3ConsumerFixture
   const next = createLfeaConsumerViewModel(bundle, paged, profile);
   assert.equal(next.display.tables.nodes.currentPage, next.display.tables.nodes.totalPages);
 }
+
 const projected = q4ConsumerFixture({ projection:true });
 const projectedBundle = inspectLfeaSourceObject(projected.review, { profile, sourceName:'projection.json', sourceByteLength:1 });
 let projectedSession = createQualifiedLfeaConsumerSession(projectedBundle);
@@ -33,4 +35,22 @@ projectedSession = updateLfeaConsumerSession(projectedSession, { resultMode:'PRO
 const projectedModel = createLfeaConsumerViewModel(projectedBundle, projectedSession, profile);
 assert.equal(projectedModel.projectedStress.authority, 'NON_AUTHORITATIVE_REVIEW_PROJECTION');
 assert.equal(projectedModel.rawStress.governing.semanticHash, projected.review.rawStressReview.governing.semanticHash);
+assertExactSelection(projectedModel, 'RAW_STRESS_LOCATION', projectedModel.rawStress.rows[0]);
+assertExactSelection(projectedModel, 'REACTION', projectedModel.reactions.rows[0]);
+assertExactSelection(projectedModel, 'PROJECTED_STRESS_LOCATION', projectedModel.projectedStress.elementCornerValues[0]);
+assertExactSelection(projectedModel, 'PROJECTED_STRESS_LOCATION', projectedModel.projectedStress.nodalValues[0]);
+
+const convergence = convergenceConsumerFixture({ projection:true });
+const convergenceBundle = inspectLfeaSourceObject(convergence.review, { profile, sourceName:'convergence.json', sourceByteLength:1 });
+const convergenceModel = createLfeaConsumerViewModel(convergenceBundle, createQualifiedLfeaConsumerSession(convergenceBundle), profile);
+assertExactSelection(convergenceModel, 'CONVERGENCE_QUANTITY', convergenceModel.convergence.levels[0]);
+assertExactSelection(convergenceModel, 'CONVERGENCE_QUANTITY', convergenceModel.convergence.quantities[0]);
+assert.equal(compareLfeaIdentity('Z10','a2'), -1);
+assert.equal(compareLfeaIdentity('a2','Z10'), 1);
+assert.equal(compareLfeaIdentity('same','same'), 0);
 console.log('LFEA-007 view-model qualification passed.');
+
+function assertExactSelection(model, type, row) {
+  const identity = lfeaSelectionIdentity(type, row);
+  assert.equal(resolveLfeaSelection(model, { type, identity }), row);
+}
