@@ -23,6 +23,7 @@ permissions:
 
 jobs:
   certify:
+    if: ${{ github.event_name != 'pull_request' || github.head_ref != 'agent/lfea-007-application-consumer' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout exact W10.R4 head
