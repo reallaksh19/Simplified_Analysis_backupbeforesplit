@@ -68,9 +68,9 @@ jobs:
           test "$(wc -c < /tmp/masr-01-payload.b64)" = '30504'
           echo '308a95904cad355c666d4b13ff3e298a0e1010b7354b7d0fdc3c12b2a5af5244  /tmp/masr-01-payload.b64' | sha256sum --check
           echo '5fab19a846c031ea9eb94410b554c6c7130f58b5a8435c8c30b4bc5df0c0f8e8  /tmp/masr-01-payload.tar.xz' | sha256sum --check
-      - name: Extract reviewed source tree
+      - name: Extract reviewed product source tree
         if: steps.gate.outputs.needed == 'true'
-        run: tar -xJf /tmp/masr-01-payload.tar.xz
+        run: tar --exclude='./.github' -xJf /tmp/masr-01-payload.tar.xz
       - name: Restore exact package and add MASR-01 commands
         if: steps.gate.outputs.needed == 'true'
         run: |
