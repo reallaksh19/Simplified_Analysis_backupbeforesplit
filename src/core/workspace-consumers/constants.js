@@ -18,6 +18,7 @@ export const APPLICATION_VIEW_STATE_V6_SCHEMA = 'application-view-state/v6';
 export const APPLICATION_VIEW_STATE_V7_SCHEMA = 'application-view-state/v7';
 export const APPLICATION_VIEW_STATE_V8_SCHEMA = 'application-view-state/v8';
 export const APPLICATION_VIEW_STATE_V9_SCHEMA = 'application-view-state/v9';
+export const APPLICATION_VIEW_STATE_V10_SCHEMA = 'application-view-state/v10';
 
 export const CONTRACT_KEYS = Object.freeze([
   'sharedModel','topologyGraph','topologyAudit','supportAttachmentModel','supportAttachmentAudit',
@@ -43,3 +44,5 @@ export const APPLICATION_NAVIGATION_ORDER_V8 = APPLICATION_NAVIGATION_ORDER_V7;
 export const APPLICATION_VIEW_IDS_V8 = APPLICATION_NAVIGATION_ORDER_V8;
 export const APPLICATION_NAVIGATION_ORDER_V9 = APPLICATION_NAVIGATION_ORDER_V8;
 export const APPLICATION_VIEW_IDS_V9 = APPLICATION_NAVIGATION_ORDER_V9;
+export const APPLICATION_NAVIGATION_ORDER_V10 = APPLICATION_NAVIGATION_ORDER_V9;
+export const APPLICATION_VIEW_IDS_V10 = APPLICATION_NAVIGATION_ORDER_V10;
