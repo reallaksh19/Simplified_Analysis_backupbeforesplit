@@ -211,6 +211,8 @@ export function bootstrapAnalysisWorkspace(rootElement) {
     getSketcherDraftAudit() { return applicationShellController.getSketcherDraftAudit(); },
     getSketcherReviewModel() { return applicationShellController.getSketcherReviewModel(); },
     getSketcherWorkspaceAdoption() { return applicationShellController.getSketcherWorkspaceAdoption(); },
+    getQaEvidenceSource() { return applicationShellController.getQaEvidenceSource(); },
+    getQaReviewModel() { return applicationShellController.getQaReviewModel(); },
     getLoadCalculationReviewModel() { return applicationShellController.getLoadCalculationReviewModel(); },
     getThreeDCalculationReviewModel() { return applicationShellController.getThreeDCalculationReviewModel(); },
     getPipeSolverReviewModel() { return applicationShellController.getPipeSolverReviewModel(); },
