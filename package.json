@@ -86,7 +86,7 @@
     "check:w10.r4:source": "node scripts/w10.r4-sketcher-source-guard.mjs && node scripts/w10.r4-registration-check.mjs",
     "check:w10.r4:browser": "playwright test e2e/w10.r4-sketcher-recovery.spec.js",
     "check:w10.r4": "npm run check:w10.r4:contracts && npm run check:w10.r4:commands && npm run check:w10.r4:properties && npm run check:w10.r4:source && npm run check:w10.r4:browser",
-    "check:workspace-browser": "playwright test e2e/phase1-analysis-workspace.spec.js e2e/phase2-workspace-dataset.spec.js e2e/phase3-viewport-renderer.spec.js e2e/phase4-viewport-picking.spec.js e2e/phase5-analysis-capabilities.spec.js e2e/phase6-analysis-sessions.spec.js e2e/phase7-analysis-ledger.spec.js e2e/phase8-engineering-geometry.spec.js e2e/phase9-analysis-readiness.spec.js e2e/w10.1-shared-model-export.spec.js e2e/w10.2-topology-workspace.spec.js e2e/w10.3-support-restraint-workspace.spec.js e2e/w10.4-model-load-workspace.spec.js e2e/w10.5-support-load-screening-workspace.spec.js e2e/w10.6-vertical-beam-workspace.spec.js e2e/w10.7-model-calculation-workspace.spec.js e2e/w10.8-workspace-consumers.spec.js e2e/w10.9-load-calc-consumer.spec.js e2e/w10.10-three-d-calc-consumer.spec.js e2e/w10.11-pipe-solver-consumer.spec.js e2e/w10.r3-settings-authority.spec.js e2e/w10.r4-sketcher-recovery.spec.js e2e/smoke.spec.js e2e/u7-workflow-smoke.spec.js",
+    "check:workspace-browser": "playwright test e2e/phase1-analysis-workspace.spec.js e2e/phase2-workspace-dataset.spec.js e2e/phase3-viewport-renderer.spec.js e2e/phase4-viewport-picking.spec.js e2e/phase5-analysis-capabilities.spec.js e2e/phase6-analysis-sessions.spec.js e2e/phase7-analysis-ledger.spec.js e2e/phase8-engineering-geometry.spec.js e2e/phase9-analysis-readiness.spec.js e2e/w10.1-shared-model-export.spec.js e2e/w10.2-topology-workspace.spec.js e2e/w10.3-support-restraint-workspace.spec.js e2e/w10.4-model-load-workspace.spec.js e2e/w10.5-support-load-screening-workspace.spec.js e2e/w10.6-vertical-beam-workspace.spec.js e2e/w10.7-model-calculation-workspace.spec.js e2e/w10.8-workspace-consumers.spec.js e2e/w10.9-load-calc-consumer.spec.js e2e/w10.10-three-d-calc-consumer.spec.js e2e/w10.11-pipe-solver-consumer.spec.js e2e/w10.r3-settings-authority.spec.js e2e/w10.r4-sketcher-recovery.spec.js e2e/smoke.spec.js e2e/u7-workflow-smoke.spec.js e2e/lfea-007-local-fea-consumer.spec.js",
     "check:pcd": "node scripts/pcd-vendor-check.mjs && node scripts/pcd-integration-check.mjs",
     "check": "npm run check:full",
     "check:package-json": "node scripts/check-package-json-duplicates.mjs",
@@ -138,7 +138,10 @@
     "ci:v13": "npm run ci:v12 && npm run check:v13 && npm run check:v13:behavior && npm run check:qa && npm run check:benchmarks && npm run build",
     "ci:v14": "npm run ci:v13 && npm run check:v14 && npm run check:v14:behavior && npm run check:benchmarks && npm run build",
     "ci:v15": "npm run ci:v14 && npm run check:v15 && npm run check:v15:behavior && npm run check:benchmarks && npm run build",
-    "ci:v16": "npm run ci:v15 && npm run check:v16 && npm run check:v16:behavior && npm run check:qa && npm run check:benchmarks && npm run build"
+    "ci:v16": "npm run ci:v15 && npm run check:v16 && npm run check:v16:behavior && npm run check:qa && npm run check:benchmarks && npm run build",
+    "check:lfea.007:static": "node scripts/lfea-007-check.mjs",
+    "check:lfea.007:browser": "playwright test e2e/lfea-007-local-fea-consumer.spec.js",
+    "check:lfea.007": "npm run check:lfea.007:static && npm run check:lfea.007:browser"
   },
   "dependencies": {
     "@react-spring/three": "^10.0.3",

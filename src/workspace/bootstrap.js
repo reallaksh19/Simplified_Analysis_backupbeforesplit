@@ -1,3 +1,4 @@
+import { createInitialLfeaConsumerProfile } from '../core/lfea-consumer/index.js';
 import { createDefaultAnalysisCapabilityRegistry } from './analysis-capabilities.js';
 import { AnalysisCoordinator } from './analysis-coordinator.js';
 import { AnalysisLedgerController } from './analysis-ledger-controller.js';
@@ -6,6 +7,7 @@ import { AnalysisSessionController } from './analysis-session-controller.js';
 import { AnalysisSessions } from './analysis-session-store.js';
 import { ApplicationShellController } from './application-shell-controller.js';
 import { DatasetController } from './dataset-controller.js';
+import { LfeaConsumerController } from './lfea-consumer-controller.js';
 import { EventBus } from './event-bus.js';
 import { ModelCalculationController } from './model-calculation-controller.js';
 import { ModelCalculationPanel } from './model-calculation-panel.js';
@@ -124,8 +126,15 @@ export function bootstrapAnalysisWorkspace(rootElement) {
     sessionStore: AnalysisSessions,
     ledgerStore: AnalysisLedger,
   });
+  const lfeaConsumerProfile = createInitialLfeaConsumerProfile();
+  const lfeaConsumerController = new LfeaConsumerController(
+    rootElement.querySelector('[data-role="lfea-consumer-root"]'),
+    EventBus,
+    lfeaConsumerProfile,
+  );
   const applicationShellController = new ApplicationShellController(
     rootElement, workspaceConsumerController, EventBus, pipeSolverAdapter, settingsController,
+    lfeaConsumerController,
   );
   const reportsConsumerController = new ReportsConsumerController(
     rootElement.querySelector('[data-role="reports-consumer-root"]'),
@@ -205,6 +214,11 @@ export function bootstrapAnalysisWorkspace(rootElement) {
     getLoadCalculationReviewModel() { return applicationShellController.getLoadCalculationReviewModel(); },
     getThreeDCalculationReviewModel() { return applicationShellController.getThreeDCalculationReviewModel(); },
     getPipeSolverReviewModel() { return applicationShellController.getPipeSolverReviewModel(); },
+    getLfeaConsumerProfile() { return lfeaConsumerProfile; },
+    getLfeaConsumerSession() { return applicationShellController.getLfeaConsumerSession(); },
+    getLfeaConsumerViewModel() { return applicationShellController.getLfeaConsumerViewModel(); },
+    getLfeaLoadedReview() { return applicationShellController.getLfeaLoadedReview(); },
+    getLfeaLoadedExport() { return applicationShellController.getLfeaLoadedExport(); },
     getModelSupportLoadReadiness() {
       const snapshot = WorkspaceState.getSnapshot();
       return snapshot.status === 'ready' && snapshot.dataset
