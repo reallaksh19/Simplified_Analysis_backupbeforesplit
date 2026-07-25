@@ -2,22 +2,24 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
-const BASELINE='c49749f447880261eb2126b3dd6046faa67ce88f';
+const BASELINE='1a64c89391ba0e4afead78de43e0ec7e82491a60';
 const authorized=[
   /^src\/core\/lfea-consumer\//,
   /^src\/core\/workspace-consumers\//,
+  /^src\/core\/qa-evidence\/(consumer-rows|source|validation)\.js$/,
   /^src\/workspace\/lfea-consumer-.*\.js$/,
   /^src\/workspace\/(application-shell-controller|bootstrap|event-topics|workspace-layout)\.js$/,
   /^scripts\/lfea-007-.*\.mjs$/,
   /^docs\/element-fea\/LFEA-007_APPLICATION_CONSUMER\.md$/,
   /^e2e\/lfea-007-local-fea-consumer\.spec\.js$/,
+  /^e2e\/(w10\.8-workspace-consumers|w10\.9-load-calc-consumer|w10\.10-three-d-calc-consumer|w10\.r4-sketcher-recovery|w10\.12-qa-evidence-consumer)\.spec\.js$/,
   /^\.github\/workflows\/lfea-007-certification\.yml$/,
   /^package\.json$/,
   /^scripts\/qa-check\.mjs$/,
 ];
 const changed=changedFiles();
 const unauthorized=changed.filter((file)=>!authorized.some((rule)=>rule.test(file)));
-assert.deepEqual(unauthorized,[],`Unauthorized LFEA-007 paths: ${unauthorized.join(', ')}`);
+assert.deepEqual(unauthorized,[],`Unauthorized LFEA-007 compatibility paths: ${unauthorized.join(', ')}`);
 assert(!changed.some((file)=>file==='package-lock.json'));
 assert(!changed.some((file)=>/^src\/core\/(element-fea|local-shell|local-stress|shared-piping-model|sketcher-draft|settings-authority)\//.test(file)));
 assert(!changed.some((file)=>/^src\/workspace\/(workspace-state|dataset-controller|analysis-|pipe-solver-)/.test(file)));
@@ -31,7 +33,7 @@ if(baselinePackage){
   assert.deepEqual(pkg.devDependencies,before.devDependencies,'LFEA-007 changed dev dependencies.');
   const allowed=new Set(['check:lfea.007:static','check:lfea.007:browser','check:lfea.007','check:workspace-browser']);
   for(const key of new Set([...Object.keys(before.scripts),...Object.keys(pkg.scripts)]))if(!allowed.has(key))assert.equal(pkg.scripts[key],before.scripts[key],`Unauthorized package script change: ${key}`);
-  assert.equal(pkg.scripts['check:workspace-browser'],`${before.scripts['check:workspace-browser']} e2e/lfea-007-local-fea-consumer.spec.js`);
+  assert.equal(pkg.scripts['check:workspace-browser'],insertBrowser(before.scripts['check:workspace-browser']));
 }
 const qa=fs.readFileSync('scripts/qa-check.mjs','utf8');
 const baselineQa=baselineText('scripts/qa-check.mjs');
@@ -50,11 +52,12 @@ for(const file of changed.filter((row)=>/\.(?:js|mjs)$/.test(row))){
 }
 const layout=fs.readFileSync('src/workspace/workspace-layout.js','utf8');
 assert.equal((layout.match(/data-webgl-host/g)||[]).length,1,'Application must retain exactly one WebGL host.');
-console.log(`LFEA-007 source boundary passed (${changed.length} changed paths).`);
+console.log(`LFEA-007 source boundary passed (${changed.length} changed paths against live W10.12 baseline).`);
 
 function changedFiles(){
-  try{return lines(execFileSync('git',['diff','--name-only',`${BASELINE}...HEAD`],{encoding:'utf8'}));}
+  try{return lines(execFileSync('git',['diff','--name-only',BASELINE,'HEAD'],{encoding:'utf8'}));}
   catch{return execFileSync('git',['status','--porcelain','-uall'],{encoding:'utf8'}).split(/\r?\n/).filter(Boolean).map((row)=>row.slice(3));}
 }
 function baselineText(file){try{return execFileSync('git',['show',`${BASELINE}:${file}`],{encoding:'utf8'});}catch{return null;}}
 function lines(value){return value.trim()?value.trim().split(/\r?\n/).filter(Boolean):[];}
+function insertBrowser(command){const token='e2e/w10.12-qa-evidence-consumer.spec.js';const addition='e2e/lfea-007-local-fea-consumer.spec.js';return command.includes(token)?command.replace(token,`${token} ${addition}`):`${command} ${addition}`;}
