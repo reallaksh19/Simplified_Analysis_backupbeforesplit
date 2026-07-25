@@ -8,7 +8,7 @@ const BASE_SHA='c49749f447880261eb2126b3dd6046faa67ce88f';
 const W10_12_MERGED_SHA='1a64c89391ba0e4afead78de43e0ec7e82491a60';
 const root=process.cwd();
 ensureCommit(W10_12_MERGED_SHA);
-const successorMode=isAncestor(W10_12_MERGED_SHA,'HEAD');
+const successorMode=read('src/core/workspace-consumers/constants.js').includes('workspace-consumer-registry/v10');
 const scopeBase=successorMode?W10_12_MERGED_SHA:resolveScopeBase();
 const changed=gitLines(['diff','--name-only',scopeBase,'HEAD']);
 const added=new Set(gitLines(['diff','--name-only','--diff-filter=A',scopeBase,'HEAD']));
@@ -61,7 +61,6 @@ function validateCoreFile(file){if(!fs.existsSync(path.join(root,file)))return;c
 function resolveScopeBase(){try{execFileSync('git',['fetch','--no-tags','origin','main'],{cwd:root,stdio:'ignore'});return gitLines(['merge-base','HEAD','origin/main'])[0]||BASE_SHA;}catch{ensureCommit(BASE_SHA);return BASE_SHA;}}
 function validateFunctionSizes(file,content){let ast;try{ast=parse(content,{sourceType:'module',plugins:['jsx']});}catch(error){errors.push(`${file} cannot be parsed for function-size review: ${error.message}`);return;}visit(ast,(node)=>{if(!['FunctionDeclaration','FunctionExpression','ArrowFunctionExpression','ClassMethod','ObjectMethod'].includes(node.type))return;const lines=(node.loc?.end?.line||0)-(node.loc?.start?.line||0)+1;if(lines>45)errors.push(`${file} contains a ${lines}-line function; maximum practical allowance is 45.`);});}
 function visit(node,callback){if(!node||typeof node!=='object')return;callback(node);Object.values(node).forEach((value)=>{if(Array.isArray(value))value.forEach((child)=>visit(child,callback));else if(value&&typeof value==='object'&&typeof value.type==='string')visit(value,callback);});}
-function isAncestor(ancestor,descendant){try{execFileSync('git',['merge-base','--is-ancestor',ancestor,descendant],{cwd:root,stdio:'ignore'});return true;}catch{return false;}}
 function addedJavaScript(){return changed.filter((file)=>added.has(file)&&/\.(?:js|mjs)$/.test(file));}
 function productionFiles(){return changed.filter((file)=>file.startsWith('src/core/qa-evidence/')||/^src\/workspace\/qa-evidence-/.test(file));}
 function coreFiles(){return changed.filter((file)=>file.startsWith('src/core/qa-evidence/'));}
