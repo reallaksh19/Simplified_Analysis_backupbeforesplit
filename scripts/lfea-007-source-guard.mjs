@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
-const BASELINE='1a64c89391ba0e4afead78de43e0ec7e82491a60';
+const BASELINE='7e12954f2923c2df574bf94cb0d94811c813d463';
 const authorized=[
   /^src\/core\/lfea-consumer\//,
   /^src\/core\/workspace-consumers\//,
@@ -52,7 +52,7 @@ for(const file of changed.filter((row)=>/\.(?:js|mjs)$/.test(row))){
 }
 const layout=fs.readFileSync('src/workspace/workspace-layout.js','utf8');
 assert.equal((layout.match(/data-webgl-host/g)||[]).length,1,'Application must retain exactly one WebGL host.');
-console.log(`LFEA-007 source boundary passed (${changed.length} changed paths against live W10.12 baseline).`);
+console.log(`LFEA-007 source boundary passed (${changed.length} changed paths against live main baseline).`);
 
 function changedFiles(){
   try{return lines(execFileSync('git',['diff','--name-only',BASELINE,'HEAD'],{encoding:'utf8'}));}
