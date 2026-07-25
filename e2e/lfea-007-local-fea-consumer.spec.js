@@ -88,7 +88,6 @@ test('qualified export downloads exact supplied bytes and failed replacement pre
   });
   await page.goto('/');await openLocalFea(page);await importSource(page,'qualified-export.json',q4.exportValue);
   await expect(page.locator('.lfea-status')).toContainText('Qualified EVIDENCE_EXPORT');
-  const acceptedHash=(await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerViewModel())).semanticHash;
   await page.getByRole('button',{name:'Supplied Files',exact:true}).click();
   const expected=q4.exportValue.files.find((row)=>row.path==='review.json');
   const [download]=await Promise.all([
@@ -98,6 +97,7 @@ test('qualified export downloads exact supplied bytes and failed replacement pre
   expect(download.suggestedFilename()).toBe('review.json');
   expect(fs.readFileSync(await download.path(),'utf8')).toBe(expected.content);
   await expect.poll(()=>page.evaluate(()=>globalThis.__lfeaUrlAudit)).toEqual({created:1,revoked:1});
+  const acceptedHash=(await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerViewModel())).semanticHash;
 
   await importSource(page,'invalid.json','{');
   await expect(page.locator('.lfea-status')).toContainText('Previous qualified review retained.');
