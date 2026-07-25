@@ -38,7 +38,13 @@ jobs:
         if: steps.gate.outputs.needed == 'true'
         run: |
           set +e
-          cat .masr-bootstrap/part-*.txt | tr -d '\r\n' > /tmp/masr-01-payload.b64
+          {
+            head -c 7600 .masr-bootstrap/part-00.txt
+            head -c 7600 .masr-bootstrap/part-01.txt
+            head -c 7600 .masr-bootstrap/part-02.txt
+            head -c 7600 .masr-bootstrap/part-03.txt
+            head -c 104 .masr-bootstrap/part-04.txt
+          } > /tmp/masr-01-payload.b64
           {
             find .masr-bootstrap -type f -maxdepth 1 -printf '%f %s\n' | sort
             echo "payload_bytes=$(wc -c < /tmp/masr-01-payload.b64)"
