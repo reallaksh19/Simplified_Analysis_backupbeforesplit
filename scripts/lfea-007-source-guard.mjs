@@ -13,7 +13,7 @@ const authorized=[
   /^docs\/element-fea\/LFEA-007_APPLICATION_CONSUMER\.md$/,
   /^e2e\/lfea-007-local-fea-consumer\.spec\.js$/,
   /^e2e\/(w10\.8-workspace-consumers|w10\.9-load-calc-consumer|w10\.10-three-d-calc-consumer|w10\.r4-sketcher-recovery|w10\.12-qa-evidence-consumer)\.spec\.js$/,
-  /^\.github\/workflows\/lfea-007-certification\.yml$/,
+  /^\.github\/workflows\/(lfea-007-certification|w10-r2-certification|w10-r3-certification|w10-r4-certification|u0-certification)\.yml$/,
   /^package\.json$/,
   /^scripts\/qa-check\.mjs$/,
 ];
@@ -23,7 +23,7 @@ assert.deepEqual(unauthorized,[],`Unauthorized LFEA-007 compatibility paths: ${u
 assert(!changed.some((file)=>file==='package-lock.json'));
 assert(!changed.some((file)=>/^src\/core\/(element-fea|local-shell|local-stress|shared-piping-model|sketcher-draft|settings-authority)\//.test(file)));
 assert(!changed.some((file)=>/^src\/workspace\/(workspace-state|dataset-controller|analysis-|pipe-solver-)/.test(file)));
-assert(!changed.some((file)=>/^\.github\/workflows\/(?!lfea-007-certification)/.test(file)));
+assert(!changed.some((file)=>/^\.github\/workflows\/(?!lfea-007-certification|w10-r2-certification|w10-r3-certification|w10-r4-certification|u0-certification)/.test(file)));
 
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
 const baselinePackage=baselineText('package.json');
