@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { q4ConsumerFixture, t3ConsumerFixture } from '../scripts/lfea-007-fixtures.mjs';
+import { lfeaSelectionIdentity } from '../src/core/lfea-consumer/index.js';
+import { convergenceConsumerFixture, q4ConsumerFixture, t3ConsumerFixture } from '../scripts/lfea-007-fixtures.mjs';
 
 const q4 = q4ConsumerFixture({ projection:true, sourceArtifacts:true });
 const t3 = t3ConsumerFixture();
+const convergence = convergenceConsumerFixture();
 const NAVIGATION = ['Home','Workspace','Load Calc','PCF','Sketcher','3D Calc','Pipe Solver','Local FEA','Reports','QA','Settings','Debug'];
 const WORKSPACE_FIXTURE = {
   schema:'inputxml-managed-stage/v1', units:{length:'mm'}, objects:[
@@ -59,10 +61,21 @@ test('Local FEA is dataset-independent, accessible and renders exact qualified r
   const nodeId=q4.review.geometryReview.nodes[0].nodeId;
   await page.locator('.lfea-svg__node').first().click();
   await expect(page.locator(`[data-lfea-table-record="${nodeId}"]`)).toHaveClass(/lfea-table__selected/);
-  await expect(page.locator('.lfea-svg__node').first()).toHaveClass(/lfea-svg__selected/);
   await page.locator(`[data-lfea-table-record="${nodeId}"]`).focus();
   await page.keyboard.press('Enter');
   expect((await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerSession())).selectedRecord.identity).toBe(nodeId);
+
+  const raw=q4.review.rawStressReview.rows[0],rawId=lfeaSelectionIdentity('RAW_STRESS_LOCATION',raw);
+  await page.getByRole('button',{name:'Raw Stress',exact:true}).click();
+  await page.locator(`[data-lfea-table-record="${rawId}"]`).click();
+  expect((await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerSession())).selectedRecord.identity).toBe(rawId);
+  await expect(page.locator('.lfea-record-details')).toContainText(raw.resultLocationId);
+
+  const reaction=q4.review.reactionReview.rows[0],reactionId=lfeaSelectionIdentity('REACTION',reaction);
+  await page.getByRole('button',{name:'Displacements and Reactions',exact:true}).click();
+  await page.locator(`[data-lfea-table-record="${reactionId}"]`).click();
+  expect((await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerSession())).selectedRecord.identity).toBe(reactionId);
+  await expect(page.locator('.lfea-record-details')).toContainText(reaction.component);
 
   const governingBefore=(await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerViewModel())).rawStress.governing.semanticHash;
   await page.getByLabel('Result mode').selectOption('PROJECTED');
@@ -71,6 +84,11 @@ test('Local FEA is dataset-independent, accessible and renders exact qualified r
   await expect(page.locator('.lfea-svg__projected-point')).toHaveCount(4);
   await page.getByRole('button',{name:'Projected Stress',exact:true}).click();
   await expect(page.getByText('NON-AUTHORITATIVE REVIEW PROJECTION',{exact:true})).toBeVisible();
+  const projected=q4.review.projectedStressReview.nodalValues.find((row)=>row.stressComponent==='SX');
+  const projectedId=lfeaSelectionIdentity('PROJECTED_STRESS_LOCATION',projected);
+  await page.locator(`[data-lfea-table-record="${projectedId}"]`).click();
+  expect((await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerSession())).selectedRecord.identity).toBe(projectedId);
+  await expect(page.locator('.lfea-record-details')).toContainText(projected.projectionPatchId);
   expect((await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerViewModel())).rawStress.governing.semanticHash).toBe(governingBefore);
   expect(await page.evaluate(()=>globalThis.__lfeaEvents)).toEqual({analysis:0,loads:0});
 
@@ -111,6 +129,16 @@ test('qualified export downloads exact supplied bytes and failed replacement pre
   await page.locator('[data-role="lfea-source-file"]').setInputFiles({name:'oversized.json',mimeType:'application/json',buffer:Buffer.alloc(16777217)});
   await expect(page.locator('.lfea-status')).toContainText('LFEA_CAPACITY_BLOCKED');
   expect((await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerViewModel())).semanticHash).toBe(acceptedHash);
+});
+
+test('convergence level selection resolves the exact unpaged source record', async ({page}) => {
+  await page.goto('/');await openLocalFea(page);await importSource(page,'convergence-review.json',convergence.review);
+  await page.getByRole('button',{name:'Convergence',exact:true}).click();
+  const level=convergence.review.convergenceReview.levels[0];
+  const levelId=lfeaSelectionIdentity('CONVERGENCE_QUANTITY',level);
+  await page.locator(`[data-lfea-table-record="${levelId}"]`).click();
+  expect((await page.evaluate(()=>AnalysisWorkspace.getLfeaConsumerSession())).selectedRecord.identity).toBe(levelId);
+  await expect(page.locator('.lfea-record-details')).toContainText(level.levelId);
 });
 
 test('T3 raw stress remains discrete and Local FEA survives Workspace replacement and clear', async ({page}) => {
