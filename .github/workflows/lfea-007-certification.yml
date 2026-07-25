@@ -1,6 +1,9 @@
 name: LFEA-007 certification
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - agent/lfea-007-application-consumer
