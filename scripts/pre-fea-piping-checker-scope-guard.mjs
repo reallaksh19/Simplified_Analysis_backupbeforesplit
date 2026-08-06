@@ -30,11 +30,14 @@ assert.ok(files.length > 0, 'Non-FEA checker source files were not found.');
 
 for (const file of files) {
   const source = readFileSync(file, 'utf8');
-  const importLines = source.split(/\r?\n/).filter((line) => /\b(?:import|export)\b/.test(line) && /from\s+['"]|import\s*\(/.test(line));
-  for (const line of importLines) {
-    const normalized = line.toLowerCase();
+  const moduleSpecifiers = [
+    ...[...source.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((match) => match[1]),
+    ...[...source.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g)].map((match) => match[1]),
+  ];
+  for (const specifier of moduleSpecifiers) {
+    const normalized = specifier.toLowerCase();
     for (const target of prohibitedImportTargets) {
-      assert.equal(normalized.includes(target), false, `${relative('.', file)} crosses the Non-FEA boundary through: ${line.trim()}`);
+      assert.equal(normalized.includes(target), false, `${relative('.', file)} crosses the Non-FEA boundary through module ${specifier}.`);
     }
   }
   for (const pattern of prohibitedRuntimeClaims) {
