@@ -76,6 +76,23 @@ const repeatedPreview = createPreFeaWorkspacePreview({
 });
 assert.equal(defaultPreview.semanticHash, repeatedPreview.semanticHash);
 
+const imperialSupport = {
+  id: 'SUP-IMPERIAL',
+  type: 'SUPPORT',
+  coOrds: { x: 0, y: 0, z: 0 },
+  attributes: { SUPPORT_TYPE: 'BILATERAL', AXIS: { x: 0, y: 1, z: 0 }, STIFFNESS_LBF_IN: 1, GAP_M: 0, PRELOAD_N: 0, FRICTION_COEFFICIENT: 0 },
+};
+const imperialPreview = createPreFeaWorkspacePreview({
+  canonicalGeometry: geometry,
+  components: [pipe, imperialSupport],
+  requestedMethods: [NON_FEA_METHOD.SUSTAINED_REACTIONS],
+});
+const convertedStiffness = imperialPreview.fieldResolutions.find((row) => row.targetKind === TARGET_KIND.SUPPORT && row.targetId === 'SUP-IMPERIAL' && row.field === 'stiffness_N_m');
+assert.ok(convertedStiffness);
+assert.ok(Math.abs(convertedStiffness.value - 175.1268352464764) < 1e-10);
+assert.equal(Object.isFrozen(imperialSupport), false);
+assert.equal(Object.isFrozen(imperialSupport.attributes), false);
+
 const qualifiedProfile = createPreFeaQualificationProfile({
   profileId: 'WORKSPACE-WEIGHT-QUALIFIED',
   codeCommitSha: 'workspace-check',
@@ -108,7 +125,7 @@ const disconnected = createPreFeaWorkspacePreview({
 assert.equal(disconnected.status, 'BLOCKED_TOPOLOGY');
 assert.ok(disconnected.diagnostics.some((row) => row.code === 'WORKSPACE_TOPOLOGY_BLOCKED'));
 
-console.log('✅ Non-FEA workspace preview, exact support attachment, qualification binding and deterministic evidence passed.');
+console.log('✅ Non-FEA workspace preview, exact support attachment, unit normalization, qualification binding and deterministic evidence passed.');
 
 function deepFrozen(value) {
   return value === null || typeof value !== 'object' || (Object.isFrozen(value) && Object.values(value).every(deepFrozen));
