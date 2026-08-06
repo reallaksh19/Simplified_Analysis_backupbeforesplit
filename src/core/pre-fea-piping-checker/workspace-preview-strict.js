@@ -1,4 +1,3 @@
-import { deepFreeze } from '../shared-piping-model/index.js';
 import { createPreFeaWorkspacePreview as createWorkspacePreview } from './workspace-preview.js';
 
 const LBF_PER_IN_TO_N_PER_M = 175.1268352464764;
@@ -16,7 +15,7 @@ export function createPreFeaWorkspacePreview(input = {}) {
 }
 
 function normalizeComponentStiffness(components) {
-  return deepFreeze(components.map((component) => {
+  return components.map((component) => {
     if (!component || typeof component !== 'object') return component;
     let changed = false;
     const clone = { ...component };
@@ -39,7 +38,7 @@ function normalizeComponentStiffness(components) {
       changed = true;
     });
     return changed ? clone : component;
-  }));
+  });
 }
 
 function hasCanonicalStiffness(container) {
