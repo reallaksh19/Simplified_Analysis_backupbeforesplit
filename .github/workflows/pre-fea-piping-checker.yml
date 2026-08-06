@@ -22,6 +22,10 @@ on:
       - 'e2e/pre-fea-piping-input-checker.spec.js'
       - '.github/workflows/pre-fea-piping-checker.yml'
 
+concurrency:
+  group: non-fea-piping-checker-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
