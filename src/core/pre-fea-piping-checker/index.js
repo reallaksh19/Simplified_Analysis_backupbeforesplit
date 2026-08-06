@@ -7,4 +7,5 @@ export { createPreFeaQualificationProfile, validatePreFeaQualificationProfile } 
 export { createCalculationReceipt, createCommonPipingLineageGraph, evaluateReceiptStaleness, validateCommonPipingLineageGraph } from './lineage.js';
 export { createPreFeaCheckRequest, sealPreFeaPipingInput, validateCommonEnrichedPipingInput, validatePreFeaCheckReport } from './checker.js';
 export { sealQualifiedPreFeaPipingInput } from './qualified-seal.js';
+export { PRE_FEA_WORKSPACE_PREVIEW_SCHEMA, buildGovernedTopologyFromCanonicalGeometry, createPreFeaWorkspacePreview } from './workspace-preview.js';
 export { createEnrichedStagedJsonExport, importEnrichedStagedJson } from './export.js';
