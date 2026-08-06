@@ -38,7 +38,6 @@ export function PreFeaInputCheckerTab() {
         sourceText: pcfText,
         engineeringDefaults,
         requestedMethods: selectedMethods,
-        requestId: `WORKSPACE-PREVIEW-${refreshSequence}`,
       });
     } catch (error) {
       return {
