@@ -40,6 +40,8 @@ jobs:
           git checkout --detach FETCH_HEAD
       - name: Runtime information
         run: node --version
+      - name: Enforce Non-FEA dependency boundary
+        run: node scripts/pre-fea-piping-checker-scope-guard.mjs
       - name: Core Non-FEA contract checks
         run: node scripts/pre-fea-piping-checker-contract-check.mjs
       - name: Workspace preview and qualification checks
