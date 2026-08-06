@@ -1,6 +1,6 @@
 import { deepFreeze } from '../shared-piping-model/index.js';
 
-export const PRE_FEА_CHECK_REQUEST_SCHEMA = 'pre-fea-piping-check-request/v1';
+export const PRE_FEA_CHECK_REQUEST_SCHEMA = 'pre-fea-piping-check-request/v1';
 export const COMMON_ENRICHED_INPUT_SCHEMA = 'common-enriched-piping-input/v1';
 export const PRE_FEA_CHECK_REPORT_SCHEMA = 'pre-fea-piping-check-report/v1';
 export const GOVERNED_TOPOLOGY_POS_SCHEMA = 'governed-topology-pos/v1';
