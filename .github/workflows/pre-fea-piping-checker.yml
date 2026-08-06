@@ -1,0 +1,31 @@
+name: Non-FEA Piping Input Checker
+
+on:
+  push:
+    branches:
+      - feat/pre-fea-input-checker-foundation
+    paths:
+      - 'src/core/pre-fea-piping-checker/**'
+      - 'scripts/pre-fea-piping-checker-contract-check.mjs'
+      - '.github/workflows/pre-fea-piping-checker.yml'
+  pull_request:
+    paths:
+      - 'src/core/pre-fea-piping-checker/**'
+      - 'scripts/pre-fea-piping-checker-contract-check.mjs'
+      - '.github/workflows/pre-fea-piping-checker.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/pre-fea-piping-checker-contract-check.mjs
