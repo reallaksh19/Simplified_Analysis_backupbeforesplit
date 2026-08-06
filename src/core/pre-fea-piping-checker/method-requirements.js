@@ -73,7 +73,11 @@ export function evaluateMethodReadiness(input = {}) {
   const active = new Set();
 
   function evaluate(methodId, inheritedRequest = false) {
-    if (resultByMethod.has(methodId)) return resultByMethod.get(methodId);
+    if (resultByMethod.has(methodId)) {
+      const cached = resultByMethod.get(methodId);
+      if (!(inheritedRequest && cached.readinessState === METHOD_READINESS_STATE.NOT_REQUESTED)) return cached;
+      resultByMethod.delete(methodId);
+    }
     if (active.has(methodId)) throw new TypeError(`Method requirement dependency cycle detected at ${methodId}.`);
     const definitionRow = definitionsById.get(methodId);
     if (!definitionRow) throw new TypeError(`Unknown Non-FEA method dependency ${methodId}.`);
