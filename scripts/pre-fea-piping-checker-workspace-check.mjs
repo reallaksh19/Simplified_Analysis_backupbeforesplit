@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import {
   NON_FEA_METHOD,
   TARGET_KIND,
+  createMethodRequirementRegistry,
   createPreFeaQualificationProfile,
   createPreFeaWorkspacePreview,
+  evaluateMethodReadiness,
 } from '../src/core/pre-fea-piping-checker/index.js';
 
 const geometry = {
@@ -93,6 +95,26 @@ assert.ok(Math.abs(convertedStiffness.value - 175.1268352464764) < 1e-10);
 assert.equal(Object.isFrozen(imperialSupport), false);
 assert.equal(Object.isFrozen(imperialSupport.attributes), false);
 
+const dependencyRegistry = createMethodRequirementRegistry({
+  definitions: [
+    { methodId: NON_FEA_METHOD.SUSTAINED_MEMBER_ACTIONS, requirements: [], qualificationBasis: 'TEST_DEPENDENCY' },
+    {
+      methodId: NON_FEA_METHOD.SUSTAINED_STRESS,
+      requirements: [{ requirementType: 'METHOD', methodId: NON_FEA_METHOD.SUSTAINED_MEMBER_ACTIONS }],
+      qualificationBasis: 'TEST_DEPENDENCY',
+    },
+  ],
+});
+const dependencyRows = evaluateMethodReadiness({
+  registry: dependencyRegistry,
+  requestedMethods: [NON_FEA_METHOD.SUSTAINED_STRESS],
+  fieldResolutions: [],
+  targetIndex: {},
+  applicability: {},
+});
+assert.equal(dependencyRows.find((row) => row.methodId === NON_FEA_METHOD.SUSTAINED_MEMBER_ACTIONS).readinessState, 'READY');
+assert.equal(dependencyRows.find((row) => row.methodId === NON_FEA_METHOD.SUSTAINED_STRESS).readinessState, 'READY');
+
 const qualifiedProfile = createPreFeaQualificationProfile({
   profileId: 'WORKSPACE-WEIGHT-QUALIFIED',
   codeCommitSha: 'workspace-check',
@@ -125,7 +147,7 @@ const disconnected = createPreFeaWorkspacePreview({
 assert.equal(disconnected.status, 'BLOCKED_TOPOLOGY');
 assert.ok(disconnected.diagnostics.some((row) => row.code === 'WORKSPACE_TOPOLOGY_BLOCKED'));
 
-console.log('✅ Non-FEA workspace preview, exact support attachment, unit normalization, qualification binding and deterministic evidence passed.');
+console.log('✅ Non-FEA workspace preview, exact support attachment, unit normalization, dependency promotion, qualification binding and deterministic evidence passed.');
 
 function deepFrozen(value) {
   return value === null || typeof value !== 'object' || (Object.isFrozen(value) && Object.values(value).every(deepFrozen));
