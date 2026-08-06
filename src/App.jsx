@@ -8,6 +8,7 @@ import { CalcExtendedTab } from './calc-extended/components/CalcExtendedTab';
 import { Viewer3DTab } from './components/Viewer3DTab';
 import SketcherTab from './sketcher/SketcherTab';
 import { AnalysisTab } from './3d-analysis';
+import { PreFeaInputCheckerTab } from './pre-fea-checker/PreFeaInputCheckerTab';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './App.css';
 
@@ -32,6 +33,7 @@ function App() {
       {activeTab === 'home' && <ErrorBoundary><Viewer3DTab /></ErrorBoundary>}
       {(activeTab === 'workspace' || activeTab === 'load-calc') && <ErrorBoundary><CalculationWorkspaceTab /></ErrorBoundary>}
       {activeTab === 'pcf' && <DataTableTab />}
+      {activeTab === 'pre-fea-check' && <ErrorBoundary><PreFeaInputCheckerTab /></ErrorBoundary>}
       {activeTab === 'sketcher' && <ErrorBoundary><SketcherTab /></ErrorBoundary>}
       {activeTab === 'simpAnalysis' && <ErrorBoundary><CalcExtendedTab /></ErrorBoundary>}
       {activeTab === '3d-analysis' && <ErrorBoundary><AnalysisTab /></ErrorBoundary>}
@@ -39,7 +41,7 @@ function App() {
       {activeTab === 'benchmarks' && <BenchmarksValidationTab />}
       {activeTab === 'settings' && <SettingsTab />}
       {activeTab === 'diagnostics' && <ConfigTab />}
-</div>
+    </div>
   );
 }
 
