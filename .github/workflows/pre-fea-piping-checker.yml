@@ -6,12 +6,20 @@ on:
       - feat/pre-fea-input-checker-foundation
     paths:
       - 'src/core/pre-fea-piping-checker/**'
-      - 'scripts/pre-fea-piping-checker-contract-check.mjs'
+      - 'src/pre-fea-checker/**'
+      - 'src/App.jsx'
+      - 'src/components/TopNav.jsx'
+      - 'scripts/pre-fea-piping-checker-*.mjs'
+      - 'e2e/pre-fea-piping-input-checker.spec.js'
       - '.github/workflows/pre-fea-piping-checker.yml'
   pull_request:
     paths:
       - 'src/core/pre-fea-piping-checker/**'
-      - 'scripts/pre-fea-piping-checker-contract-check.mjs'
+      - 'src/pre-fea-checker/**'
+      - 'src/App.jsx'
+      - 'src/components/TopNav.jsx'
+      - 'scripts/pre-fea-piping-checker-*.mjs'
+      - 'e2e/pre-fea-piping-input-checker.spec.js'
       - '.github/workflows/pre-fea-piping-checker.yml'
 
 permissions:
@@ -20,12 +28,23 @@ permissions:
 jobs:
   contract-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: node scripts/pre-fea-piping-checker-contract-check.mjs
+      - name: Checkout exact commit without marketplace actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git init .
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --no-tags --depth=1 origin "+${GITHUB_REF}:${GITHUB_REF}"
+          git checkout --detach FETCH_HEAD
+      - name: Runtime information
+        run: node --version
+      - name: Core Non-FEA contract checks
+        run: node scripts/pre-fea-piping-checker-contract-check.mjs
+      - name: Workspace preview and qualification checks
+        run: node scripts/pre-fea-piping-checker-workspace-check.mjs
+      - name: Install application dependencies
+        run: npm ci --ignore-scripts
+      - name: Build application consumer
+        run: npm run build
