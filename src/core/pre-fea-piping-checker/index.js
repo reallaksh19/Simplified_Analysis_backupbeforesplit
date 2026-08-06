@@ -6,4 +6,5 @@ export { createGovernedLoadCaseBasis, qualifyLoadCaseSuperposition, validateGove
 export { createPreFeaQualificationProfile, validatePreFeaQualificationProfile } from './qualification.js';
 export { createCalculationReceipt, createCommonPipingLineageGraph, evaluateReceiptStaleness, validateCommonPipingLineageGraph } from './lineage.js';
 export { createPreFeaCheckRequest, sealPreFeaPipingInput, validateCommonEnrichedPipingInput, validatePreFeaCheckReport } from './checker.js';
+export { sealQualifiedPreFeaPipingInput } from './qualified-seal.js';
 export { createEnrichedStagedJsonExport, importEnrichedStagedJson } from './export.js';
